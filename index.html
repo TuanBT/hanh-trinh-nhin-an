@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hành trình Nhịn ăn</title>
-<meta name="description" content="Lịch nhịn ăn theo giờ: nhập giờ bắt đầu để biết cơ thể đang làm gì, bữa tới ăn gì, lúc này nên làm gì. Kèm tài liệu lý thuyết: insulin, tự thực, nhai kỹ, lợi ích và an toàn.">
+<meta name="description" content="Bản đồng hành khi nhịn ăn 1 ngày: nhập giờ bắt đầu nhịn để biết lúc này nên làm gì, bữa tới ăn gì, cơ thể đang ở chặng nào; đếm nước, ghi lại cảm nhận. Nội dung theo tài liệu của chương trình.">
 <meta name="theme-color" content="#476A3F">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Hành trình Nhịn ăn">
-<meta property="og:description" content="Nhập giờ bắt đầu nhịn để biết từng giờ: cơ thể đang làm gì, bữa tới ăn gì, lúc này nên làm gì.">
+<meta property="og:description" content="Nhập giờ bắt đầu nhịn để biết lúc này nên làm gì, bữa tới ăn gì; đếm nước và ghi lại cảm nhận.">
 <meta property="og:url" content="https://tuanbt.github.io/hanh-trinh-nhin-an/">
 <meta property="og:image" content="https://tuanbt.github.io/hanh-trinh-nhin-an/img/og.jpg">
 <meta property="og:image:width" content="1200">
@@ -24,7 +24,7 @@ try{var t=JSON.parse(localStorage.getItem('na-theme'));if(t==='dark'||t==='light
 window.phq=[];window.ph=function(i){i.style.visibility='hidden';phq.push(i)};
 </script>
 <style>
-/* Bố cục: trên cùng là “Lịch của bạn” (dùng hằng ngày khi đang nhịn), bên dưới là 9 phần tài liệu đọc dọc.
+/* Bố cục: trên cùng là “Lịch của bạn” (dùng hằng ngày khi thực hành), bên dưới là 4 phần đọc dọc.
    Màu lấy theo bộ ảnh của chương trình: xanh lá xô thơm, vàng mù tạt, nâu; tông mùa thu. */
 :root{
   --bg:#F6F2EA; --surface:#FFFDF8; --surface-2:#EFE9DD; --paper:#EAE2D2;
@@ -36,8 +36,8 @@ window.phq=[];window.ph=function(i){i.style.visibility='hidden';phq.push(i)};
   --indigo:#3D5A9A; --indigo-soft:#DFE6F3;
   --plum:#77478F; --plum-soft:#ECDDF2;
   --good:#2F7A3E; --warn:#8F620A; --bad:#B23838;
-  /* màu chuỗi biểu đồ (đã kiểm tra mù màu theo thứ tự này) */
-  --f1:#B8436E; --f2:#C98A12; --f3:#2E8B6A; --f4:#3F6FB5;
+  /* màu ba nguồn năng lượng */
+  --f2:#C98A12; --f3:#2E8B6A; --f4:#3F6FB5;
   --f-display:"Fraunces", Georgia, "Times New Roman", serif;
   --f-body:"Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
   --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -50,7 +50,7 @@ window.phq=[];window.ph=function(i){i.style.visibility='hidden';phq.push(i)};
   --brown:#D9A66C; --brown-soft:#33261A; --rose:#EE8FA1; --rose-soft:#3B1E25;
   --indigo:#9FB4EA; --indigo-soft:#1F2842; --plum:#CBA5E6; --plum-soft:#2E2240;
   --good:#6CC384; --warn:#E2B24C; --bad:#EF7B7B;
-  --f1:#D9668F; --f2:#B3801A; --f3:#3A9A78; --f4:#6489D6; color-scheme:dark }}
+  --f2:#B3801A; --f3:#3A9A78; --f4:#6489D6; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#12140F; --surface:#1A1D16; --surface-2:#22261D; --paper:#262A20;
   --ink:#ECE8DC; --ink-2:#C4C0B1; --muted:#9B988A; --line:#343A2C;
@@ -58,7 +58,7 @@ window.phq=[];window.ph=function(i){i.style.visibility='hidden';phq.push(i)};
   --brown:#D9A66C; --brown-soft:#33261A; --rose:#EE8FA1; --rose-soft:#3B1E25;
   --indigo:#9FB4EA; --indigo-soft:#1F2842; --plum:#CBA5E6; --plum-soft:#2E2240;
   --good:#6CC384; --warn:#E2B24C; --bad:#EF7B7B;
-  --f1:#D9668F; --f2:#B3801A; --f3:#3A9A78; --f4:#6489D6; color-scheme:dark }
+  --f2:#B3801A; --f3:#3A9A78; --f4:#6489D6; color-scheme:dark }
 :root[data-theme="light"]{color-scheme:light}
 
 *{box-sizing:border-box}
@@ -110,16 +110,13 @@ svg.ico{width:22px; height:22px; flex:none; stroke:currentColor; fill:none; stro
 
 .grid{display:grid; gap:16px}
 .g2{grid-template-columns:repeat(auto-fit, minmax(min(100%, 340px), 1fr))}
-.g3{grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr))}
-.g4{grid-template-columns:repeat(auto-fit, minmax(min(100%, 220px), 1fr))}
-.g5{grid-template-columns:repeat(auto-fit, minmax(min(100%, 180px), 1fr))}
 .card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:18px 18px 20px; display:grid; gap:10px; align-content:start; min-width:0}
 .card p{color:var(--ink-2); font-size:.95rem}
 :where(.card) ul, :where(.card) ol{padding-left:1.15em; color:var(--ink-2); font-size:.95rem; display:grid; gap:4px}
 .card.danger{border-color:var(--rose); background:color-mix(in srgb, var(--rose-soft) 55%, var(--surface))}
 .card.danger h3{color:var(--rose)}
-.card.danger ul{color:var(--ink)}
-.panel{background:var(--surface-2); border-radius:var(--r); padding:18px; display:grid; gap:10px}
+.card.danger p{color:var(--ink)}
+.panel{background:var(--surface-2); border-radius:var(--r); padding:14px 16px; display:grid; gap:8px}
 .panel p, .panel li{color:var(--ink-2); font-size:.95rem}
 .chips{display:flex; flex-wrap:wrap; gap:6px}
 .chip{font:inherit; font-size:.82rem; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); cursor:pointer; line-height:1.3}
@@ -129,16 +126,17 @@ svg.ico{width:22px; height:22px; flex:none; stroke:currentColor; fill:none; stro
 .chip.static:hover{border-color:var(--line)}
 .tag{display:inline-flex; align-items:center; gap:4px; font-size:.72rem; font-weight:600; letter-spacing:.03em; padding:2px 8px; border-radius:999px; background:var(--surface-2); color:var(--ink-2); white-space:nowrap; justify-self:start; line-height:1.5}
 .tag.ct{background:var(--sage-soft); color:var(--sage)}
-.tag.extra{background:var(--indigo-soft); color:var(--indigo)}
 .tag.must{background:var(--amber-soft); color:var(--amber)}
-.note-extra{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:var(--r); background:var(--indigo-soft); color:var(--ink); font-size:.92rem; max-width:820px}
-.note-extra .ico{color:var(--indigo); margin-top:2px}
+.tag.q{background:var(--amber-soft); color:var(--warn)}
+.note-extra{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:10px; background:var(--indigo-soft); color:var(--ink); font-size:.88rem}
+.note-extra .ico{color:var(--indigo); margin-top:2px; width:18px; height:18px}
 
 /* ảnh và khung chờ ảnh */
 .icard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; display:grid; grid-template-rows:auto 1fr; min-width:0}
 .icard > img, .icard > .ph{width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:var(--paper)}
-.icard .body{padding:14px 16px 16px; display:grid; gap:7px; align-content:start}
-.icard .body p{color:var(--ink-2); font-size:.92rem}
+.icard .body{padding:14px 16px 16px; display:grid; gap:8px; align-content:start}
+.icard .body p, .icard .body li{color:var(--ink-2); font-size:.92rem}
+.icard ul{padding-left:1.1em; display:grid; gap:3px}
 .icard h3{font-size:1.08rem}
 div.ph{display:grid!important; place-items:center; color:var(--sage); background:
   radial-gradient(120% 90% at 85% 10%, color-mix(in srgb, var(--amber-soft) 90%, transparent), transparent 60%),
@@ -149,22 +147,7 @@ div.ph{display:grid!important; place-items:center; color:var(--sage); background
 @media (min-width:880px){ .lead{grid-template-columns:1fr 1fr} }
 .lead figure{margin:0; min-width:0}
 .lead figure img, .lead figure .ph{width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:16px; display:block; background:var(--paper)}
-figcaption{font-size:.76rem; color:var(--muted); margin-top:6px}
 
-/* mức bằng chứng: hình dạng + chữ */
-.ev{display:inline-flex; align-items:center; gap:6px; font-size:.72rem; font-weight:600; padding:2px 9px 2px 7px; border-radius:999px; white-space:nowrap; line-height:1.5}
-.ev::before{content:""; width:8px; height:8px; border-radius:2px; background:currentColor}
-.ev-strong{background:var(--sage-soft); color:var(--sage)}
-.ev-mid{background:var(--indigo-soft); color:var(--indigo)}
-.ev-mid::before{border-radius:50%}
-.ev-weak{background:var(--amber-soft); color:var(--amber)}
-.ev-weak::before{transform:rotate(45deg); width:7px; height:7px}
-.ev-trad{background:var(--rose-soft); color:var(--rose)}
-.ev-trad::before{border-radius:50%; background:transparent; border:2px solid currentColor; width:6px; height:6px}
-
-sup.c{font-size:.68em; line-height:0; margin-left:1px}
-sup.c a{text-decoration:none; font-family:var(--f-mono); color:var(--sage); padding:0 1px}
-sup.c a:hover{text-decoration:underline}
 blockquote{margin:0; padding:12px 16px; border-left:3px solid var(--amber); background:var(--amber-soft); border-radius:0 var(--r) var(--r) 0; color:var(--ink)}
 blockquote cite{display:block; font-style:normal; font-size:.82rem; color:var(--muted); margin-top:6px}
 
@@ -173,16 +156,18 @@ details.more > summary{cursor:pointer; list-style:none; padding:12px 16px; font-
 details.more > summary::-webkit-details-marker{display:none}
 details.more > summary::before{content:"+"; font-family:var(--f-mono); width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:var(--surface-2); color:var(--sage); flex:none}
 details.more[open] > summary::before{content:"−"}
-details.more > .in{padding:0 16px 16px; display:grid; gap:12px}
+details.more > .in{padding:0 16px 16px; display:grid; gap:10px}
+details.more > .in p{color:var(--ink-2); font-size:.95rem; max-width:72ch}
 
 .iconrow{display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 210px), 1fr))}
+.iconrow.one{grid-template-columns:1fr}
 .iconrow > div{display:grid; grid-template-columns:40px 1fr; gap:10px; align-items:start}
 .iconrow .ib{width:40px; height:40px; border-radius:12px; background:var(--sage-soft); color:var(--sage); display:grid; place-items:center}
 .iconrow h4{font-size:.95rem}
 .iconrow p{font-size:.88rem; color:var(--ink-2)}
 
 /* ---- mở đầu + lịch ---- */
-.top{display:grid; gap:24px; padding-block:36px 48px; grid-template-areas:"text" "lich" "fig" "tldr"}
+.top{display:grid; gap:24px; padding-block:36px 56px; grid-template-areas:"text" "lich" "fig" "tldr"}
 @media (min-width:960px){ .top{grid-template-columns:1.08fr .92fr; grid-template-areas:"text fig" "tldr fig" "lich lich"; column-gap:40px; row-gap:24px; align-items:start} }
 .hero-text{grid-area:text; display:grid; gap:14px; min-width:0}
 .hero-text h1{font-size:clamp(2.5rem, 1.6rem + 4.2vw, 4.4rem); font-weight:600; letter-spacing:-.02em; line-height:1.02}
@@ -194,13 +179,6 @@ details.more > .in{padding:0 16px 16px; display:grid; gap:12px}
 .tldr li{display:grid; grid-template-columns:28px 1fr; gap:8px; color:var(--ink-2); font-size:.96rem}
 .tldr li::before{counter-increment:t; content:counter(t); font-family:var(--f-mono); font-size:.78rem; color:var(--sage); border:1px solid var(--sage); border-radius:50%; width:24px; height:24px; display:grid; place-items:center; margin-top:1px}
 .tldr strong{color:var(--ink)}
-.vtoc{display:grid; gap:12px; grid-template-columns:repeat(auto-fill, minmax(min(100%, 160px), 1fr)); padding-bottom:56px}
-@media (min-width:1100px){ .vtoc{grid-template-columns:repeat(9, minmax(0, 1fr))} }
-.vtoc a{display:grid; grid-template-rows:auto auto; text-decoration:none; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden}
-.vtoc a:hover{border-color:var(--sage)}
-.vtoc img, .vtoc .ph{width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:var(--paper)}
-.vtoc span{padding:8px 10px 10px; font-size:.86rem; font-weight:600; line-height:1.3}
-.vtoc span b{display:block; font-family:var(--f-mono); font-weight:500; font-size:.72rem; color:var(--sage)}
 
 .trk{grid-area:lich; scroll-margin-top:64px; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:18px; display:grid; gap:18px; min-width:0; box-shadow:0 1px 2px rgb(40 30 10 / .05), 0 14px 32px -20px rgb(60 45 15 / .35)}
 @media (min-width:720px){ .trk{padding:24px} }
@@ -217,7 +195,9 @@ details.more > .in{padding:0 16px 16px; display:grid; gap:12px}
 .field > span:first-child{font-size:.84rem; font-weight:600; color:var(--ink-2)}
 .two{display:grid; grid-template-columns:minmax(0, 1.4fr) minmax(0, 1fr); gap:8px}
 .three{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px}
-.three label{display:grid; gap:4px; font-size:.78rem; color:var(--muted)}
+.mt{display:grid; gap:4px; font-size:.78rem; color:var(--muted); align-content:start}
+.mt .eat{display:flex; gap:6px; align-items:center; font-size:.8rem; color:var(--ink-2); cursor:pointer}
+.mt .eat input{accent-color:var(--sage); width:15px; height:15px; margin:0}
 input[type="date"], input[type="time"], input[type="search"], input[type="text"], select, textarea{font:inherit; font-size:1rem; padding:10px 11px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); min-width:0; width:100%}
 input:focus, select:focus, textarea:focus{outline:2px solid var(--sage); outline-offset:0; border-color:var(--sage)}
 textarea{resize:vertical; line-height:1.5}
@@ -261,14 +241,13 @@ textarea{resize:vertical; line-height:1.5}
 .phase dd{margin:4px 0 0}
 .phase dd ul, .phase > ul{padding-left:1.1em; display:grid; gap:3px; color:var(--ink); font-size:.94rem}
 .phase .prog{background:var(--surface)}
-.phase .chip{background:var(--surface)}
 .why-box{border-left:3px solid var(--sage); padding:6px 0 6px 12px; font-size:.94rem; color:var(--ink)}
 .why-box b{display:block; font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600}
 .menu-box{display:grid; gap:8px}
 .menu-box .mrow{display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:start; font-size:.93rem; color:var(--ink-2)}
 .menu-box .mrow b{color:var(--ink)}
 .side{display:grid; gap:14px; min-width:0}
-.side h3{font-size:1.05rem; font-family:var(--f-body); font-weight:600}
+.side h3, .tcard h3{font-size:1.05rem; font-family:var(--f-body); font-weight:600}
 .up{list-style:none; margin:0; padding:0; display:grid; gap:8px}
 .up li{display:grid; grid-template-columns:34px 1fr; gap:10px; align-items:start; padding:10px 12px; border-radius:var(--r); border:1px solid var(--line); background:var(--surface)}
 .up li.first{border-color:var(--sage); background:color-mix(in srgb, var(--sage-soft) 55%, var(--surface))}
@@ -283,7 +262,6 @@ textarea{resize:vertical; line-height:1.5}
 .up b, .sched b{display:block; font-size:.94rem; color:var(--ink); line-height:1.35}
 .up p, .sched p{font-size:.88rem; color:var(--ink-2); margin-top:2px}
 .actions{display:flex; flex-wrap:wrap; gap:6px}
-.done-note{font-size:.84rem; color:var(--good)}
 .sched-wrap{display:grid; gap:8px}
 details.day{border:1px solid var(--line); border-radius:var(--r); background:var(--surface)}
 details.day > summary{cursor:pointer; list-style:none; padding:10px 14px; display:flex; gap:10px; align-items:baseline; flex-wrap:wrap}
@@ -298,6 +276,27 @@ details.day.today > summary .tag{background:var(--sage); color:var(--surface)}
 .sched li.nowi{background:var(--sage-soft); opacity:1}
 .sched .menu{margin-top:6px; padding:8px 10px; background:var(--surface-2); border-radius:8px; font-size:.86rem; color:var(--ink-2)}
 
+/* theo dõi: nước và cảm nhận */
+.track{display:grid; gap:14px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 320px), 1fr)); align-items:start}
+.tcard{border:1px solid var(--line); border-radius:14px; padding:16px; display:grid; gap:12px; background:var(--surface); min-width:0}
+.water{display:flex; align-items:baseline; gap:4px 12px; flex-wrap:wrap}
+.water .num{font-weight:650; font-size:2rem; line-height:1; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.cups{display:flex; flex-wrap:wrap; gap:5px}
+.cups i{width:16px; height:22px; border-radius:3px 3px 6px 6px; border:1.5px solid var(--indigo); opacity:.5}
+.cups i.f{background:var(--indigo); opacity:1}
+.help{display:grid; gap:8px; padding:12px 14px; border-radius:var(--r); background:var(--surface-2); font-size:.92rem}
+.help ul{list-style:none; margin:0; padding:0; display:grid; gap:5px}
+.help li{display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:start}
+.help li .ico{width:18px; height:18px; color:var(--sage); margin-top:2px}
+.help .who{font-size:.86rem; color:var(--muted)}
+.logl{list-style:none; margin:0; padding:0; display:grid; gap:6px}
+.logl li{display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:start; padding:9px 12px; border-radius:10px; background:var(--surface-2)}
+.logl .when{font-family:var(--f-mono); font-size:.74rem; color:var(--muted)}
+.logl .what{font-size:.92rem; color:var(--ink)}
+.logl .x{grid-row:span 2; border:0; background:transparent; color:var(--muted); cursor:pointer; padding:4px; border-radius:6px}
+.logl .x:hover{color:var(--bad)}
+.logl .x .ico{width:16px; height:16px}
+
 /* ---- chuẩn bị ---- */
 .tool{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:20px; display:grid; gap:14px; min-width:0; align-content:start}
 .tool-head{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline}
@@ -305,20 +304,12 @@ details.day.today > summary .tag{background:var(--sage); color:var(--surface)}
 .checks label{display:grid; grid-template-columns:20px 1fr; gap:10px; align-items:start; font-size:.93rem; color:var(--ink-2); cursor:pointer}
 .checks input{margin-top:4px; accent-color:var(--sage); width:16px; height:16px}
 .checks input:checked + span{color:var(--muted); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--muted) 60%, transparent)}
-.checks.noline input:checked + span{text-decoration:none; color:var(--ink)}
-.checks .grp{font-size:.74rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:8px}
+.checks .grp{font-size:.74rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-top:8px; scroll-margin-top:90px}
 .checks .tag{margin-left:6px; vertical-align:1px}
 .prog{height:8px; border-radius:99px; background:var(--surface-2); overflow:hidden}
 .prog i{display:block; height:100%; background:var(--sage); border-radius:99px; transition:width .2s}
-.result{border-radius:var(--r); padding:14px 16px; display:grid; gap:6px; border:1px solid var(--line)}
-.result .st{display:inline-flex; gap:8px; align-items:center; font-weight:700}
-.result.ok{background:var(--sage-soft)} .result.ok .st{color:var(--good)}
-.result.adj{background:var(--amber-soft)} .result.adj .st{color:var(--warn)}
-.result.stop{background:var(--rose-soft)} .result.stop .st{color:var(--bad)}
-.result ul{padding-left:1.1em; font-size:.92rem; color:var(--ink)}
-.broth ol{padding-left:1.2em; color:var(--ink-2); font-size:.9rem; display:grid; gap:3px}
 
-/* ---- ngày giảm ăn ---- */
+/* ---- Ngày 1 ---- */
 .seg{display:inline-flex; flex-wrap:wrap; gap:4px; padding:4px; background:var(--surface-2); border-radius:12px; justify-self:start}
 .seg button{font:inherit; font-size:.88rem; border:0; background:transparent; color:var(--ink-2); padding:8px 14px; border-radius:8px; cursor:pointer}
 .seg button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgb(0 0 0 / .08); font-weight:600}
@@ -338,7 +329,7 @@ details.day.today > summary .tag{background:var(--sage); color:var(--surface)}
 
 /* thẻ nhóm thực phẩm: điện thoại thì nằm ngang cho gọn, màn rộng thì ảnh ở trên */
 .fgroups{display:grid; gap:10px}
-.gcard{display:grid; grid-template-columns:96px 1fr; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; min-width:0}
+.gcard{display:grid; grid-template-columns:112px 1fr; background:var(--surface); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; min-width:0}
 .gcard > img, .gcard > .ph{width:100%; height:100%; min-height:96px; object-fit:cover; display:block; background:var(--paper)}
 .gcard > .ph svg{width:40px}
 .gcard .body{padding:12px 14px; display:grid; gap:4px; align-content:center}
@@ -349,11 +340,10 @@ details.day.today > summary .tag{background:var(--sage); color:var(--surface)}
 .gcard.stop h3{color:var(--brown)}
 .gcard.stop > img, .gcard.stop > .ph{filter:saturate(.75)}
 @media (min-width:720px){
-  .fgroups.g-allow{grid-template-columns:repeat(auto-fit, minmax(170px, 1fr))}
+  .fgroups.g-allow{grid-template-columns:repeat(auto-fit, minmax(190px, 1fr))}
   .fgroups.g-stop{grid-template-columns:repeat(auto-fit, minmax(220px, 1fr))}
   .gcard{grid-template-columns:1fr; grid-template-rows:auto 1fr}
   .gcard > img, .gcard > .ph{height:auto; min-height:0; aspect-ratio:4/3}
-  .g-allow .gcard > img, .g-allow .gcard > .ph{aspect-ratio:1/1}
   .gcard .body{align-content:start}
 }
 
@@ -375,84 +365,8 @@ details.day.today > summary .tag{background:var(--sage); color:var(--surface)}
 .slot.N{background:var(--rose-soft); color:var(--bad)}
 .slot.Q{background:var(--amber-soft); color:var(--warn)}
 .fitem p{font-size:.9rem; color:var(--ink-2)}
-.fitem .meta{display:flex; flex-wrap:wrap; gap:6px 12px; font-size:.8rem; color:var(--muted); align-items:center}
 
-/* ---- khi nhịn ---- */
-.src3{display:grid; gap:12px}
-.src3 > div{display:grid; grid-template-columns:44px 1fr; gap:12px; padding:14px; border-radius:var(--r); background:var(--surface); border:1px solid var(--line)}
-.src3 .n{width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-family:var(--f-display); font-size:1.2rem; font-weight:600; color:#fff; background:var(--fc)}
-.src3 h4{font-size:1rem}
-.src3 p{font-size:.9rem; color:var(--ink-2)}
-.src3 .when{font-family:var(--f-mono); font-size:.76rem; color:var(--muted)}
-.viz{position:relative}
-.viz svg.chart{width:100%; height:auto; display:block; overflow:visible}
-.ax{font-family:var(--f-mono); font-size:11px; fill:var(--muted)}
-.axl{font-family:var(--f-body); font-size:12px; fill:var(--ink-2); paint-order:stroke; stroke:var(--surface); stroke-width:4px; stroke-linejoin:round}
-.gridl{stroke:var(--line); stroke-width:1}
-.tip{position:absolute; z-index:5; pointer-events:none; background:var(--ink); color:var(--bg); font-size:.8rem; line-height:1.4; padding:7px 10px; border-radius:8px; max-width:240px; transform:translate(-50%, calc(-100% - 10px))}
-.tip b{display:block}
-.legend{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:.84rem; color:var(--ink-2); align-items:center}
-.legend span{display:inline-flex; align-items:center; gap:6px}
-.sw{width:14px; height:4px; border-radius:2px; display:inline-block}
-.sw.dot{width:10px; height:10px; border-radius:50%}
-.tbl-wrap{overflow-x:auto; min-width:0}
-table{border-collapse:collapse; width:100%; font-size:.9rem}
-th,td{text-align:left; vertical-align:top; padding:9px 11px; border-bottom:1px solid var(--line)}
-th{font-size:.74rem; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); font-weight:600}
-td{color:var(--ink-2)}
-.phases{display:grid; gap:10px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 330px), 1fr))}
-.pcard{border:1px solid var(--line); border-radius:var(--r); background:var(--surface); padding:14px 16px; display:grid; gap:8px; align-content:start; border-top:4px solid var(--pc)}
-.pcard.cur{box-shadow:0 0 0 2px var(--sage); border-color:transparent; border-top-color:var(--pc)}
-.pcard .hh{font-family:var(--f-mono); font-size:.78rem; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-.pcard .hh .tag{background:var(--sage); color:var(--surface)}
-.pcard h4{font-size:1.02rem; font-family:var(--f-display); font-weight:600}
-.pcard p{font-size:.9rem; color:var(--ink-2)}
-.pcard ul{padding-left:1.1em; font-size:.88rem; color:var(--ink-2); display:grid; gap:2px}
-.plan{list-style:none; margin:0; padding:0; display:grid; gap:6px}
-.plan > li{display:grid; grid-template-columns:54px 1fr; gap:12px; padding:9px 12px; background:var(--surface-2); border-radius:8px}
-.plan .min{font-family:var(--f-mono); font-size:.86rem; color:var(--sage); font-weight:500; padding-top:1px}
-.plan b{color:var(--ink); font-size:.93rem}
-.plan p{font-size:.88rem; color:var(--ink-2)}
-.tbcard{display:grid; gap:10px; padding:14px; border-radius:var(--r); background:var(--surface-2)}
-.tbcard ul{list-style:none; padding:0; display:grid; gap:7px}
-.tbcard li{display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:start; font-size:.93rem; color:var(--ink)}
-.tbcard .flag{display:flex; gap:8px; align-items:flex-start; font-size:.88rem; color:var(--bad); background:var(--rose-soft); border-radius:8px; padding:8px 10px}
-.tbcard .flag .ico{width:18px; height:18px; margin-top:2px}
-.reds{list-style:none; padding:0!important; display:grid; gap:8px!important}
-.reds li{display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:start}
-.reds .ico{width:18px; height:18px; color:var(--bad); margin-top:3px}
-
-/* ---- ăn lại ---- */
-.ladder{list-style:none; margin:0; padding:0; display:grid; gap:8px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 170px), 1fr))}
-.ladder li{position:relative; display:grid; gap:6px; align-content:start; padding:14px; border-radius:var(--r); background:color-mix(in srgb, var(--sage-soft) calc(var(--k) * 1%), var(--surface)); border:1px solid var(--line)}
-.ladder .n{font-family:var(--f-mono); font-size:.76rem; color:var(--sage); font-weight:500}
-.ladder .ib{width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:var(--surface); color:var(--sage)}
-.ladder p{font-size:.88rem; color:var(--ink)}
-.rfdays{display:grid; gap:10px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr))}
-.rfday{border:1px solid var(--line); border-radius:var(--r); padding:14px; display:grid; gap:8px; align-content:start; background:var(--surface)}
-.rfday h4{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-.rfday dl{margin:0; display:grid; gap:6px}
-.rfday dt{font-size:.72rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
-.rfday dd{margin:0; font-size:.9rem; color:var(--ink-2)}
-
-/* ---- insulin ---- */
-.cycle{list-style:none; margin:0; padding:0; display:grid; gap:10px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 170px), 1fr)); counter-reset:cy}
-.cycle li{position:relative; padding:14px 14px 14px 46px; border-radius:var(--r); background:var(--surface-2); font-size:.92rem; color:var(--ink); min-height:72px; display:flex; align-items:center}
-.cycle li::before{counter-increment:cy; content:counter(cy); position:absolute; left:12px; top:14px; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-family:var(--f-mono); font-size:.78rem; background:var(--rose); color:var(--surface)}
-.cycle-back{display:flex; gap:8px; align-items:center; font-size:.88rem; color:var(--rose); font-weight:600}
-.two-col{display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 260px), 1fr))}
-.side-card{border-radius:var(--r); padding:14px 16px; display:grid; gap:6px; align-content:start}
-.side-card.on{background:var(--amber-soft)}
-.side-card.off{background:var(--sage-soft)}
-.side-card .k{font-size:.72rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase}
-.side-card.on .k{color:var(--amber)} .side-card.off .k{color:var(--sage)}
-.side-card b{font-size:1.05rem; color:var(--ink)}
-.side-card p{font-size:.9rem; color:var(--ink-2)}
-
-/* ---- tự thực ---- */
-.qa{display:grid; gap:8px}
-
-/* ---- nhai kỹ ---- */
+/* nhai kỹ + đồng hồ ăn chậm */
 .timer{display:grid; gap:14px; justify-items:center; text-align:center}
 .ring{position:relative; width:min(220px, 70vw); aspect-ratio:1}
 .ring svg{width:100%; height:100%; transform:rotate(-90deg)}
@@ -463,23 +377,30 @@ td{color:var(--ink-2)}
 .ring .t span{font-size:.8rem; color:var(--muted)}
 .prompt{min-height:3em; font-size:1.02rem; color:var(--ink); max-width:32ch}
 
-/* ---- lợi ích, lịch sử ---- */
-.ben{display:grid; gap:6px; align-content:start; padding:14px 16px; border-radius:var(--r); background:var(--surface); border:1px solid var(--line)}
-.ben h4{font-size:.98rem}
-.ben p{font-size:.9rem; color:var(--ink-2)}
-.ben .meta{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
-.evlegend{display:flex; flex-wrap:wrap; gap:8px}
-.tl{list-style:none; margin:0; padding:0; border-left:2px solid var(--line); margin-left:6px}
-.tl li{position:relative; padding:0 0 20px 24px; display:grid; gap:3px}
-.tl li::before{content:""; position:absolute; left:-8px; top:6px; width:14px; height:14px; border-radius:50%; background:var(--surface); border:3px solid var(--tc, var(--sage))}
-.tl .yr{font-family:var(--f-mono); font-size:.78rem; color:var(--muted)}
-.tl p{color:var(--ink-2); font-size:.93rem; max-width:72ch}
+/* ---- khi nhịn ---- */
+.src3{display:grid; gap:12px}
+.src3 > div{display:grid; grid-template-columns:44px 1fr; gap:12px; padding:14px; border-radius:var(--r); background:var(--surface); border:1px solid var(--line)}
+.src3 .n{width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-family:var(--f-display); font-size:1.2rem; font-weight:600; color:#fff; background:var(--fc)}
+.src3 h4{font-size:1rem}
+.src3 p{font-size:.9rem; color:var(--ink-2)}
+.src3 .when{font-family:var(--f-mono); font-size:.76rem; color:var(--muted)}
+.phases{display:grid; gap:10px; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr))}
+.pcard{border:1px solid var(--line); border-radius:var(--r); background:var(--surface); padding:14px 16px; display:grid; gap:8px; align-content:start; border-top:4px solid var(--pc)}
+.pcard.cur{box-shadow:0 0 0 2px var(--sage); border-color:transparent; border-top-color:var(--pc)}
+.pcard .hh{font-family:var(--f-mono); font-size:.78rem; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.pcard .hh .tag{background:var(--sage); color:var(--surface)}
+.pcard h4{font-size:1.02rem; font-family:var(--f-display); font-weight:600}
+.pcard p{font-size:.9rem; color:var(--ink-2)}
+.tbcard{display:grid; gap:10px; padding:14px; border-radius:var(--r); background:var(--surface-2)}
+.tbcard ul{list-style:none; padding:0; display:grid; gap:7px}
+.tbcard li{display:grid; grid-template-columns:auto 1fr; gap:8px; align-items:start; font-size:.93rem; color:var(--ink)}
+.tbcard li .ico{width:18px; height:18px; color:var(--sage); margin-top:2px}
 
-.src{margin:0; padding-left:2.2em; display:grid; gap:6px; font-size:.86rem; color:var(--ink-2)}
-.src li{padding-left:4px; scroll-margin-top:80px}
-.src li:target{background:var(--amber-soft); border-radius:4px}
-.src a{word-break:break-word}
-.src .int{font-size:.74rem; color:var(--muted)}
+/* ---- hiểu thêm ---- */
+.qa{display:grid; gap:8px}
+.flow{list-style:none; margin:0; padding:0!important; display:grid; gap:6px!important}
+.flow li{padding:8px 12px; border-radius:8px; background:var(--surface); color:var(--ink)!important}
+
 footer{border-top:1px solid var(--line); padding-block:24px; font-size:.84rem; color:var(--muted); display:grid; gap:6px}
 .toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:10px; font-size:.9rem; z-index:50; box-shadow:0 8px 24px rgb(0 0 0 / .25); max-width:calc(100vw - 32px)}
 </style>
@@ -487,7 +408,7 @@ footer{border-top:1px solid var(--line); padding-block:24px; font-size:.84rem; c
 <body>
 
 <header class="toc"><div class="toc-in"><nav id="toc" aria-label="Mục lục">
-  <a href="#lich" class="cal">Lịch của bạn</a><a href="#chuan-bi">1 · Chuẩn bị</a><a href="#giam-an">2 · Ngày giảm ăn</a><a href="#khi-nhin">3 · Khi nhịn</a><a href="#an-lai">4 · Ăn lại</a><a href="#insulin">5 · Insulin</a><a href="#tu-thuc">6 · Tự thực</a><a href="#nhai-ky">7 · Nhai kỹ</a><a href="#loi-ich">8 · Lợi ích và an toàn</a><a href="#lich-su">9 · Lịch sử</a><a href="#nguon">Nguồn</a>
+  <a href="#lich" class="cal">Lịch của bạn</a><a href="#chuan-bi">1 · Chuẩn bị</a><a href="#ngay-1">2 · Ngày 1: giảm ăn</a><a href="#khi-nhin">3 · Khi nhịn</a><a href="#hieu-them">4 · Hiểu thêm</a>
 </nav><button type="button" class="theme-btn" id="theme-btn" aria-label="Đổi nền sáng/tối"><svg class="ico i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="ico i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button></div></header>
 
 <main class="wrap">
@@ -495,76 +416,74 @@ footer{border-top:1px solid var(--line); padding-block:24px; font-size:.84rem; c
 <!-- ================= MỞ ĐẦU + LỊCH ================= -->
 <div class="top" id="mo-dau">
   <div class="hero-text">
-    <span class="eyebrow">Cho người tham gia chương trình nhịn ăn · 10/2026</span>
+    <span class="eyebrow">Cho người tham gia chương trình nhịn ăn 1 ngày · mùa thu 2026</span>
     <h1>Hành trình <em>Nhịn ăn</em></h1>
-    <p class="lede">Nhập giờ bạn bắt đầu nhịn để biết từng giờ: cơ thể đang làm gì, bữa tới ăn gì, lúc này nên làm gì. Bên dưới là tài liệu lý thuyết của chương trình, có đối chiếu với nghiên cứu.</p>
+    <p class="lede">Bản đồng hành khi thực hành. Nhập giờ bạn bắt đầu nhịn để biết lúc này nên làm gì, bữa tới ăn gì, cơ thể đang ở chặng nào; đếm nước và ghi lại cảm nhận. Nội dung theo tài liệu của chương trình.</p>
   </div>
   <figure class="hero-fig">
-    <img src="img/hero.jpg" data-ph="sun" alt="Minh hoạ người phụ nữ ngồi bên cửa sổ mùa thu, hai tay cầm cốc nước ấm" onerror="ph(this)">
+    <img src="img/hero.jpg" data-ph="sun" alt="Minh hoạ người phụ nữ ngồi bên cửa sổ mùa thu, hai tay cầm cốc nước" onerror="ph(this)">
   </figure>
   <ol class="tldr">
-    <li><span><strong>Nhịn là cho cơ thể nghỉ tiêu hoá</strong> để dùng kho dự trữ: trước hết glycogen trong gan (12–24 giờ), rồi mỡ, rồi thể ketone từ ngày thứ 2–3.<sup class="c" data-s="ct_lythuyet,cahill2006"></sup></span></li>
-    <li><span><strong>Bốn chặng:</strong> tuần chuẩn bị, ngày giảm ăn, những giờ nhịn, ăn lại từ từ.</span></li>
-    <li><span><strong>Ngày giảm ăn:</strong> chỉ bữa chính, không ăn vặt; rau củ quả, ngũ cốc nguyên hạt, khoai, hạt, dầu ép lạnh. Ngừng sữa, thịt cá trứng, đường, cà phê, rượu bia.<sup class="c" data-s="ct_ngay1"></sup></span></li>
-    <li><span><strong>Khi nhịn:</strong> nước là chính; có sẵn magie, tinh dầu bạc hà, trà xanh, muối biển, nước hầm gà cho lúc khó chịu.<sup class="c" data-s="ct_chuanbi"></sup></span></li>
-    <li><span><strong>Không tự nhịn</strong> nếu đang mang thai, cho con bú, dưới 18 tuổi, quá gầy hay dùng thuốc tiểu đường. Biết dấu hiệu phải dừng.<sup class="c" data-s="ct_lythuyet,grajower2019"></sup></span></li>
+    <li><span><strong>Ba chặng:</strong> tuần chuẩn bị, Ngày 1 giảm ăn, rồi những giờ nhịn.</span></li>
+    <li><span><strong>Ngày 1:</strong> chỉ ăn bữa chính, không ăn vặt, uống 1,5–2 lít nước. Ăn rau củ quả, ngũ cốc nguyên hạt, khoai, hạt, dầu ép lạnh; ngừng sữa, thịt cá trứng, đậu, đường, cà phê, trà, rượu bia.</span></li>
+    <li><span><strong>Khi nhịn:</strong> uống nước; có sẵn magie, tinh dầu bạc hà, trà xanh, muối biển, nước hầm gà cho lúc khó chịu.</span></li>
+    <li><span><strong>Có câu hỏi hay biểu hiện lạ trên cơ thể:</strong> liên lạc người hướng dẫn.</span></li>
   </ol>
   <section id="lich" class="trk" aria-labelledby="lich-h">
     <div class="trk-head"><h2 id="lich-h">Lịch của bạn</h2><span class="clock" id="trk-clock"></span></div>
-    <div id="trk-body"></div>
+    <div id="trk-now"></div>
+    <div id="trk-log" class="track" hidden></div>
+    <div id="trk-sched"></div>
   </section>
 </div>
-<nav class="vtoc" id="vtoc" aria-label="Các phần"></nav>
 
 <!-- ================= 1. CHUẨN BỊ ================= -->
 <section id="chuan-bi" class="chapter">
   <div class="chapter-head">
     <span class="eyebrow">Phần 1 · Tuần chuẩn bị</span>
     <h2>Chuẩn bị cho cơ thể và tâm trí</h2>
-    <p class="lede">Trí óc ở đó để bảo vệ bạn, và nó đặc biệt sợ những gì chưa từng biết. Hãy cho nó sự bảo đảm rằng mọi chuyện sẽ ổn, để não bộ hợp tác với cơ thể.<sup class="c" data-s="ct_chuanbi"></sup></p>
+    <p class="lede">Trí óc ở đó để bảo vệ bạn, và nó đặc biệt sợ những gì chưa từng biết. Hãy cho nó sự an ủi, sự bảo đảm rằng mọi chuyện sẽ ổn, để não bộ hợp tác với cơ thể.</p>
   </div>
   <div class="lead">
-    <figure><img src="img/c_prep.jpg" data-ph="basket" alt="Minh hoạ đồ chuẩn bị: rau củ, dầu ép lạnh, hạt, muối biển, magie, tinh dầu bạc hà, trà xanh" loading="lazy" onerror="ph(this)"></figure>
+    <figure><img src="img/c_prep.jpg" data-ph="basket" alt="Minh hoạ đồ chuẩn bị: rau củ quả, dầu ép lạnh, hạt, muối biển, magie, tinh dầu bạc hà, trà xanh" loading="lazy" onerror="ph(this)"></figure>
     <div class="grid" style="gap:14px">
-      <blockquote>Nhịn ăn không chỉ là trải nghiệm của cơ thể; nó còn liên quan tới trí não và tâm hồn. Có thể bạn sẽ nhìn rõ hơn tâm trí mình, rồi “đứt đoạn” với những thói quen ăn uống muốn giã từ từ lâu.<cite>Tin nhắn tuần chuẩn bị<sup class="c" data-s="ct_chuanbi"></sup></cite></blockquote>
+      <blockquote>Nhịn ăn không chỉ là trải nghiệm thuần tuý về cơ thể; nó còn liên quan tới trí não và tâm hồn. Có thể bạn sẽ nhìn rõ hơn tâm trí mình, rồi “đứt đoạn” với những thói quen ăn uống muốn giã từ từ lâu.<cite>Tin nhắn tuần chuẩn bị</cite></blockquote>
       <div class="tool" id="why-tool">
         <h3>Vì sao mình nhịn lần này?</h3>
-        <p class="small muted">Viết ra đây. Trang sẽ nhắc lại câu trả lời của bạn vào những giờ khó nhất. Chỉ lưu trên máy của bạn.</p>
+        <p class="small muted">Viết ra đây. Trang sẽ nhắc lại câu trả lời của bạn vào những giờ khó. Chỉ lưu trên máy của bạn.</p>
         <textarea id="why" rows="4" placeholder="Ví dụ: mình muốn bỏ thói quen ăn vặt buổi tối, và muốn biết cảm giác đói thật là thế nào."></textarea>
       </div>
     </div>
   </div>
   <div class="grid g2">
-    <div class="tool">
+    <div class="tool" id="prep">
       <div class="tool-head"><h3>Danh sách chuẩn bị</h3><span class="mono muted" id="prep-count"></span></div>
-      <p class="small muted">Theo tin nhắn tuần chuẩn bị của chương trình.<sup class="c" data-s="ct_chuanbi"></sup> Tiến độ lưu trên máy của bạn.</p>
+      <p class="small muted">Ngoài rau củ quả, dầu ép lạnh là bắt buộc, những thứ còn lại có hay không tuỳ bạn sẵn sàng hỗ trợ cơ thể đến đâu; có đủ thì việc nhịn hiệu quả và đỡ mệt nhất. Tiến độ lưu trên máy của bạn.</p>
       <div class="prog"><i id="prep-bar" style="width:0"></i></div>
       <div class="checks" id="prep-list"></div>
     </div>
     <div class="grid" style="gap:16px; align-content:start">
-      <div class="icard broth">
+      <div class="icard" id="nuoc-ham">
         <img src="img/c_broth.jpg" data-ph="pot" alt="Minh hoạ nồi nước hầm xương gà với hành tây, cà rốt, củ cải, cần tây" loading="lazy" onerror="ph(this)">
         <div class="body">
           <h3>Nước hầm xương gà</h3>
           <div class="chips" id="broth-ing"></div>
-          <ol id="broth-steps"></ol>
-          <p class="small" id="broth-use"></p>
+          <p id="broth-how"></p>
+          <ul id="broth-use"></ul>
         </div>
       </div>
-    </div>
-  </div>
-  <div class="tool" id="screen">
-    <h3>Kiểm tra an toàn trước khi nhịn</h3>
-    <p class="small muted">Đánh dấu những gì đúng với bạn. Công cụ tham khảo, không thay thế bác sĩ.</p>
-    <div class="grid g2" style="gap:20px; align-items:start">
-      <div class="checks noline" id="screen-list"></div>
-      <div class="result" id="screen-result" aria-live="polite"></div>
+      <div class="card" id="khong-nen">
+        <h3>Ai không nên nhịn</h3>
+        <ul id="not-for"></ul>
+        <p class="small">Theo tài liệu: nhịn ăn cần làm đúng cách, có hướng dẫn của chuyên gia. Làm bừa bãi thì có thể thành bạo hành cơ thể thay vì mang lại lợi ích.</p>
+        <p class="note-extra"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>Lưu ý chung, không có trong tài liệu: đang dùng thuốc hằng ngày (nhất là thuốc tiểu đường) hoặc có bệnh mạn tính thì hỏi bác sĩ trước khi nhịn.</span></p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ================= 2. NGÀY GIẢM ĂN ================= -->
-<section id="giam-an" class="chapter">
+<!-- ================= 2. NGÀY 1 ================= -->
+<section id="ngay-1" class="chapter">
   <div class="chapter-head">
     <span class="eyebrow">Phần 2 · Ngày 1</span>
     <h2>Ngày giảm ăn</h2>
@@ -580,7 +499,7 @@ footer{border-top:1px solid var(--line); padding-block:24px; font-size:.84rem; c
     <div class="meal" id="meal-panel" role="tabpanel"></div>
   </div>
   <div class="tool finder" id="finder">
-    <div class="tool-head"><h3>Món này ăn được không?</h3><span class="small muted">Ngày giảm ăn · 99 món</span></div>
+    <div class="tool-head"><h3>Món này ăn được không?</h3><span class="small muted" id="finder-n"></span></div>
     <label class="search" for="fq"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="fq" placeholder="Gõ tên món: chuối, đậu hũ, cà phê…" autocomplete="off" aria-label="Tên thực phẩm"></label>
     <div class="chips" id="fq-pop" aria-label="Hay hỏi"></div>
     <div class="fres" id="fres" aria-live="polite"></div>
@@ -588,12 +507,28 @@ footer{border-top:1px solid var(--line); padding-block:24px; font-size:.84rem; c
   <div class="sub">
     <h3>Năm nhóm được ăn</h3>
     <div class="fgroups g-allow" id="allowed"></div>
-    <p class="small muted">Dầu: chất béo duy nhất là dầu thực vật ép lạnh, rưới nguội lên rau. Trong hai loại dầu tài liệu gợi ý, sacha inchi mới thật sự giàu omega-3 (khoảng một nửa là axit alpha-linolenic);<sup class="c" data-s="sacha"></sup> dầu mè chủ yếu là omega-6.</p>
+    <p class="small muted">Chất béo duy nhất là dầu thực vật ép lạnh chất lượng tốt, rưới lên rau củ.</p>
   </div>
   <div class="sub">
     <h3>Ngừng ăn từ Ngày 1</h3>
-    <p>Tám nhóm dưới đây dừng lại từ ngày giảm ăn, qua suốt những ngày nhịn, và được thêm lại dần khi ăn lại.<sup class="c" data-s="ct_ngay1"></sup></p>
     <div class="fgroups g-stop" id="stopped"></div>
+  </div>
+  <div class="sub" id="nhai-ky">
+    <h3>Ăn chậm, nhai kỹ</h3>
+    <p>Quan trọng không chỉ là ăn gì, mà là ăn như thế nào. Ăn nhiều mà không hấp thu được thì lượng cũng chẳng để làm gì.</p>
+    <div class="grid g2" style="align-items:start">
+      <div class="grid" style="gap:14px">
+        <figure style="margin:0"><img src="img/c_chew.jpg" data-ph="bowl" alt="Minh hoạ người ăn chậm rãi, cầm bát cơm, không có điện thoại" loading="lazy" onerror="ph(this)" style="width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:16px; display:block; background:var(--paper)"></figure>
+        <div class="iconrow one" id="chew"></div>
+      </div>
+      <div class="tool timer" id="slow">
+        <h3>Bữa ăn chậm 20 phút</h3>
+        <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="tr" cx="60" cy="60" r="52"/><circle class="fg" id="ring-fg" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="0"/></svg><div class="t"><b id="ring-t">20:00</b><span id="ring-s">sẵn sàng</span></div></div>
+        <p class="prompt" id="slow-prompt" aria-live="polite">Bấm bắt đầu khi ngồi vào bàn. Vài phút trang sẽ nhắc bạn một điều nhỏ.</p>
+        <div class="btnrow"><button class="btn primary" id="slow-go">Bắt đầu</button><button class="btn ghost" id="slow-reset">Làm lại</button></div>
+        <p class="small muted">Não chỉ nhận được tín hiệu no khoảng 20 phút sau khi bắt đầu ăn.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -601,268 +536,71 @@ footer{border-top:1px solid var(--line); padding-block:24px; font-size:.84rem; c
 <section id="khi-nhin" class="chapter">
   <div class="chapter-head">
     <span class="eyebrow">Phần 3 · Những giờ nhịn</span>
-    <h2>Cơ thể làm gì khi bạn nhịn</h2>
-    <p class="lede">Khi ngừng ăn, cơ thể không ngừng làm việc: nó tìm “plan B” và tự nuôi mình từ bên trong, lần lượt qua ba nguồn năng lượng. Mỗi chặng dài ngắn tuỳ thể trạng từng người.<sup class="c" data-s="ct_lythuyet"></sup></p>
+    <h2>Khi bạn nhịn</h2>
+    <p class="lede">Khi ngừng ăn, cơ thể không ngừng làm việc: nó tìm “plan B” và tự nuôi mình từ bên trong, lần lượt qua ba nguồn năng lượng. Mỗi chặng dài ngắn tuỳ thể tạng từng người.</p>
   </div>
   <div class="lead">
-    <figure><img src="img/c_fast.jpg" data-ph="leaf" alt="Minh hoạ người đi bộ chậm trong công viên mùa thu, tay cầm chai nước" loading="lazy" onerror="ph(this)"></figure>
+    <figure><img src="img/c_fast.jpg" data-ph="leaf" alt="Minh hoạ người phụ nữ nghỉ ở nhà đọc sách, cốc nước bên cạnh" loading="lazy" onerror="ph(this)"></figure>
     <div class="src3" id="src3"></div>
-  </div>
-  <div class="card viz" id="fuel-card">
-    <h3>Cơ thể lấy năng lượng từ đâu, theo giờ</h3>
-    <p class="small muted">Minh hoạ xu hướng theo tài liệu, không phải số đo. Thời điểm thật khác nhau ở mỗi người.<sup class="c" data-s="ct_lythuyet,anton2018,cahill2006"></sup></p>
-    <div id="fuel-viz"></div>
-    <details class="more"><summary>Xem dạng bảng</summary><div class="in"><div class="tbl-wrap"><table id="fuel-tbl"></table></div></div></details>
   </div>
   <div class="sub">
     <h3>Theo từng giờ</h3>
     <div class="phases" id="phases"></div>
   </div>
   <div class="grid g2">
-    <div class="card">
-      <h3>Một ngày nhịn mẫu</h3>
-      <p class="small muted">Giờ ăn quen thuộc lấy theo lịch của bạn (mặc định 7:00, 12:00, 18:30).</p>
-      <ol class="plan" id="routine"></ol>
-    </div>
+    <div class="card"><h3>Trong lúc nhịn</h3><div class="iconrow one" id="during"></div></div>
     <div class="card" id="ho-tro">
       <h3>Hộp hỗ trợ khi khó chịu</h3>
-      <p class="small muted">Chọn điều bạn đang gặp. <span class="tag ct">Chương trình</span> là cách tài liệu hướng dẫn; còn lại là gợi ý thêm.<sup class="c" data-s="ct_chuanbi"></sup></p>
-      <div class="chips" id="tb-chips" role="group" aria-label="Triệu chứng"></div>
+      <p class="small muted">Chọn điều bạn đang gặp để biết dùng đồ chuẩn bị nào, theo danh sách của chương trình.</p>
+      <div class="chips" id="tb-chips" role="group" aria-label="Điều bạn đang gặp"></div>
       <div id="tb-card" aria-live="polite"></div>
     </div>
   </div>
-  <div class="card danger" id="dung">
-    <h3>Dừng nhịn, gọi người hướng dẫn hoặc đi khám ngay khi</h3>
-    <ul class="reds" id="redflags"></ul>
-    <p class="small">Nhịn ăn cần đúng cách và có người hướng dẫn theo sát; làm bừa bãi có thể thành bạo hành cơ thể thay vì mang lại lợi ích.<sup class="c" data-s="ct_lythuyet,buchinger2013"></sup></p>
+  <div class="card danger" id="bao-ngay">
+    <h3>Báo người hướng dẫn</h3>
+    <p>Có câu hỏi, thắc mắc hay biểu hiện khác lạ trên cơ thể: liên lạc người hướng dẫn. Lắng nghe cơ thể và thực hành nhịn ăn một cách an toàn, có ý thức.</p>
+    <p class="small"><b>Lưu ý chung, không có trong tài liệu:</b> ngất, đau ngực, khó thở, lú lẫn hay nôn liên tục thì dừng nhịn và đi khám ngay.</p>
   </div>
-</section>
-
-<!-- ================= 4. ĂN LẠI ================= -->
-<section id="an-lai" class="chapter">
-  <div class="chapter-head">
-    <span class="eyebrow">Phần 4 · Phá nhịn</span>
-    <h2>Ăn lại từ từ</h2>
-    <p class="lede">Nhịn càng lâu, ăn lại càng phải chậm. Thứ tự thêm lại thực phẩm đi ngược với danh sách ngừng ăn của Ngày 1: nhẹ trước, nặng sau.</p>
-  </div>
-  <p class="note-extra"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>Tài liệu của chương trình chưa nói tới giai đoạn ăn lại. Phần này là gợi ý chung theo hướng dẫn nhịn ăn Buchinger;<sup class="c" data-s="buchinger2013"></sup> nếu người hướng dẫn có thực đơn riêng, hãy theo người hướng dẫn.</span></p>
-  <div class="lead">
-    <figure><img src="img/c_refeed.jpg" data-ph="apple" alt="Minh hoạ bữa phá nhịn: quả táo hấp và bát súp rau nhỏ" loading="lazy" onerror="ph(this)"></figure>
-    <div class="grid" style="gap:14px">
-      <div class="panel"><b id="rf-first-t"></b><p id="rf-first-d"></p></div>
-      <div class="iconrow" id="rf-rules"></div>
-    </div>
-  </div>
-  <div class="card">
-    <h3>Thêm lại thực phẩm theo bậc</h3>
-    <ol class="ladder" id="ladder"></ol>
-  </div>
-  <div class="tool">
-    <div class="tool-head"><h3>Thực đơn ăn lại theo số ngày nhịn</h3></div>
-    <div class="seg" role="tablist" aria-label="Số ngày nhịn" id="rf-len"></div>
-    <div id="rf-plan"></div>
-  </div>
-  <div class="grid g2">
+  <div class="grid g2" id="pha-nhin">
+    <div class="card"><h3>Phá nhịn</h3><p id="break-d"></p></div>
     <div class="card"><h3>Giữ lại thói quen tốt</h3><ul id="keep"></ul></div>
-    <div class="card"><h3>Vì sao không ăn lại vội?</h3>
-      <p>Sau nhiều ngày không ăn, hệ tiêu hoá và cơ thể cần thời gian để quen lại. Ăn nhiều, ăn nhanh dễ gây đầy bụng, khó chịu.</p>
-      <p>Người rất gầy, suy dinh dưỡng hoặc gần như không ăn trong nhiều ngày còn có nguy cơ “hội chứng nuôi ăn lại”: rối loạn điện giải nguy hiểm khi ăn trở lại quá đột ngột.<sup class="c" data-s="refeed"></sup></p>
-    </div>
   </div>
 </section>
 
-<!-- ================= 5. INSULIN ================= -->
-<section id="insulin" class="chapter">
+<!-- ================= 4. HIỂU THÊM ================= -->
+<section id="hieu-them" class="chapter">
   <div class="chapter-head">
-    <span class="eyebrow">Phần 5 · Vì sao nhịn ăn có tác dụng</span>
-    <h2>Insulin, hormone của dự trữ</h2>
-    <p class="lede">Để hiểu về nhịn ăn, rất cần hiểu về insulin. Nghe có vẻ “chuyên môn”, nhưng ý chính chỉ có vài dòng.<sup class="c" data-s="ct_lythuyet"></sup></p>
+    <span class="eyebrow">Phần 4 · Đọc trong tuần chuẩn bị</span>
+    <h2>Hiểu thêm</h2>
+    <p class="lede">Tóm tắt ngắn tài liệu lý thuyết và bộ ảnh về insulin của chương trình.</p>
   </div>
   <div class="lead">
     <figure><img src="img/c_insulin.jpg" data-ph="cell" alt="Minh hoạ insulin như chiếc chìa khoá mở cửa tế bào cho đường đi vào" loading="lazy" onerror="ph(this)"></figure>
-    <div class="grid" style="gap:12px">
-      <div class="card">
-        <h3>Insulin làm hai việc</h3>
-        <ol>
-          <li><b>Đưa glucose vào tế bào</b> để tạo năng lượng; nhờ vậy đường huyết trở về mức bình thường.</li>
-          <li><b>Cất phần dư:</b> trước hết thành glycogen trong gan và cơ (dùng trung hạn), còn thừa nữa thì thành mỡ trong gan, dưới da, vùng bụng (dài hạn).</li>
-        </ol>
-        <p class="small muted">Theo tài liệu và bộ ảnh của chương trình.<sup class="c" data-s="ct_lythuyet,ct_insulin,insulin"></sup></p>
-      </div>
-      <div class="two-col">
-        <div class="side-card on"><span class="k">Insulin cao</span><b>Cất vào kho</b><p>Cơ thể dùng đường vừa ăn và thúc đẩy dự trữ; mỡ không được đốt.<sup class="c" data-s="insulin"></sup></p></div>
-        <div class="side-card off"><span class="k">Insulin thấp</span><b>Mở kho ra dùng</b><p>Gan nhả glycogen, mỡ được huy động làm năng lượng.<sup class="c" data-s="anton2018"></sup></p></div>
-      </div>
+    <div class="card" id="insulin">
+      <h3>Insulin, hormone của dự trữ</h3>
+      <ol id="ins-jobs"></ol>
+      <div class="panel"><b>Vòng luẩn quẩn của insulin cao</b><ul class="flow" id="ins-cycle"></ul></div>
+      <p><b>Insulin cao kéo dài:</b> <span id="ins-harm"></span></p>
+      <p><b>Nhịn ăn giúp:</b> <span id="ins-gain"></span></p>
     </div>
   </div>
-  <div class="card viz" id="ins-card">
-    <h3>Ăn vặt khiến insulin không có lúc nghỉ</h3>
-    <p class="small muted">Minh hoạ, không phải số đo. Nếu ăn quá nhiều hoặc quá thường xuyên, đường huyết không có thời gian hạ xuống, insulin luôn ở mức cao, và cơ thể không có cơ hội dùng mỡ dự trữ.<sup class="c" data-s="ct_lythuyet"></sup></p>
-    <div class="legend" id="ins-legend"></div>
-    <div id="ins-viz"></div>
-    <details class="more"><summary>Xem dạng bảng</summary><div class="in"><div class="tbl-wrap"><table id="ins-tbl"></table></div></div></details>
-  </div>
+  <div class="card"><h3>Điều bạn cần biết</h3><ul id="ins-know"></ul></div>
+  <div class="qa" id="learn"></div>
   <div class="card">
-    <h3>Vòng luẩn quẩn của insulin cao</h3>
-    <ol class="cycle" id="cycle"></ol>
-    <p class="cycle-back"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v4h4"/></svg>Rồi lại quay về bước 1.</p>
-    <p><b>Hậu quả của insulin cao kéo dài:</b> tăng nguy cơ béo phì, tiểu đường type 2, kháng insulin.<sup class="c" data-s="ct_insulin"></sup></p>
+    <h3>Ta hay ăn vì đâu?</h3>
+    <p>Ngoài cái đói thật, ta thường ăn vì những lý do khác:</p>
+    <div class="chips" id="why-eat"></div>
   </div>
-  <div class="grid g2">
-    <div class="card">
-      <h3>Leptin, hormone báo no</h3>
-      <p>Leptin chủ yếu do tế bào mỡ tiết ra, báo cho não rằng cơ thể đã đủ năng lượng.<sup class="c" data-s="zhang1994"></sup></p>
-      <p>Theo tài liệu: khi insulin cao kéo dài, cơ thể tiếp tục sản sinh leptin; lâu dần sinh ra <b>kháng leptin</b>. Não tin rằng mình chưa no, ta lại ăn, thường là snack ngọt hay mặn chứ không phải đĩa xà lách, và vòng lặp tiếp diễn.<sup class="c" data-s="ct_lythuyet"></sup></p>
-    </div>
-    <div class="card">
-      <h3>Điều bạn cần biết</h3>
-      <ul>
-        <li>Ăn vặt giữa các bữa khiến hệ tiêu hoá không được nghỉ chút nào, bị kích thích thường trực.<sup class="c" data-s="ct_lythuyet"></sup></li>
-        <li>Nhiều mỡ vùng bụng có thể là dấu hiệu insulin thường xuyên cao. Mỡ nội tạng mới là loại không tốt cho sức khoẻ.<sup class="c" data-s="ct_lythuyet"></sup></li>
-        <li>Nhịn ăn giúp “reset” chu trình sản xuất insulin, ổn định trao đổi chất.<sup class="c" data-s="ct_insulin"></sup> Nghiên cứu cho thấy nhịn có thể cải thiện độ nhạy insulin.<sup class="c" data-s="decabo2019"></sup></li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- ================= 6. TỰ THỰC ================= -->
-<section id="tu-thuc" class="chapter">
-  <div class="chapter-head">
-    <span class="eyebrow">Phần 6 · Autophagy</span>
-    <h2>Tự thực: đội dọn dẹp của tế bào</h2>
-    <p class="lede">Khi ta để cơ thể được yên, tế bào bắt đầu phân huỷ, tái chế và loại bỏ các thành phần hư hại.<sup class="c" data-s="ct_lythuyet"></sup></p>
-  </div>
-  <div class="lead">
-    <figure><img src="img/c_autophagy.jpg" data-ph="cell" alt="Minh hoạ tế bào như một thành phố nhỏ với đội vệ sinh dọn dẹp, tái chế" loading="lazy" onerror="ph(this)"></figure>
-    <div class="grid" style="gap:12px">
-      <div class="two-col">
-        <div class="side-card on"><span class="k">Có thức ăn · mTOR bật</span><b>Xây dựng, phát triển</b><p>Tổng hợp protein, tăng trưởng, dự trữ.</p></div>
-        <div class="side-card off"><span class="k">Thiếu thức ăn · AMPK bật</span><b>Dọn dẹp, tái chế</b><p>Tự thực tăng: phân huỷ cái cũ hỏng, lấy nguyên liệu làm cái mới.</p></div>
-      </div>
-      <p class="small muted">Hai trạng thái này luân phiên nhau, như lúc hoạt động và lúc nghỉ. Ăn liên tục ba bữa và ăn vặt thì gần như không có lúc “dọn nhà”.<sup class="c" data-s="ct_lythuyet,bagherniya2018"></sup></p>
-    </div>
-  </div>
-  <div class="qa" id="qa"></div>
-  <blockquote>Tôi khuyến khích bạn tích hợp các giai đoạn nghỉ ngơi tiêu hoá vào cuộc sống hằng ngày để quá trình tự thực diễn ra tự nhiên. Điều quan trọng là tìm thấy sự cân bằng giữa nhịn và phát triển, giữa làm sạch và hoạt động.<cite>Tài liệu lý thuyết về nhịn ăn<sup class="c" data-s="ct_lythuyet"></sup></cite></blockquote>
-</section>
-
-<!-- ================= 7. NHAI KỸ ================= -->
-<section id="nhai-ky" class="chapter">
-  <div class="chapter-head">
-    <span class="eyebrow">Phần 7 · Ăn trong chánh niệm</span>
-    <h2>Nhai kỹ</h2>
-    <p class="lede">Quan trọng không chỉ là ăn gì, mà là ăn như thế nào. Ăn nhiều mà không hấp thu được thì lượng cũng chẳng để làm gì.<sup class="c" data-s="ct_lythuyet"></sup></p>
-  </div>
-  <div class="lead">
-    <figure><img src="img/c_chew.jpg" data-ph="bowl" alt="Minh hoạ người ăn chậm rãi, đũa đặt trên bát, không có điện thoại" loading="lazy" onerror="ph(this)"></figure>
-    <div class="iconrow" style="grid-template-columns:1fr">
-      <div><span class="ib"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M8 7c0-1.5 1-2 1-3.5M12 7c0-1.5 1-2 1-3.5M16 7c0-1.5 1-2 1-3.5"/></svg></span><div><h4>Tiêu hoá bắt đầu từ miệng</h4><p>Enzyme trong nước bọt đã làm việc. Nhai tới khi thức ăn nhão, thành nước; khi đó thực phẩm mới “nhả” hết dưỡng chất.<sup class="c" data-s="ct_lythuyet"></sup></p></div></div>
-      <div><span class="ib"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h4>Não cần khoảng 20 phút để biết đã no</h4><p>Ăn nhanh, nuốt vội thì đã “ngốn” rất nhiều trước khi tín hiệu no tới.<sup class="c" data-s="ct_lythuyet"></sup> Một nghiên cứu nhỏ trên 30 phụ nữ: ăn chậm thì ăn ít hơn trong bữa.<sup class="c" data-s="andrade2008"></sup> <span class="ev ev-mid">Bằng chứng vừa</span></p></div></div>
-      <div><span class="ib"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.6-9 9-9 9z"/></svg></span><div><h4>Ăn ít hơn mà no lâu</h4><p>Bạn sẽ nhận ra chỉ cần ăn ít hơn thường lệ mà vẫn no, và tận hưởng từng miếng.<sup class="c" data-s="ct_lythuyet"></sup></p></div></div>
-    </div>
-  </div>
-  <div class="grid g2">
-    <div class="card">
-      <h3>Khi ăn, chỉ ăn</h3>
-      <ul>
-        <li>Không tivi, không nhạc, không điện thoại, không sách báo, không chuyện trò rôm rả.</li>
-        <li>Tập trung vào hương thơm, mùi vị, kết cấu của thức ăn.</li>
-        <li>Chú ý cảm xúc và cảm nhận của cơ thể.</li>
-        <li>Thử hôm nay: nhai thật lâu một miếng. Vị của nó có khác mọi khi không?</li>
-      </ul>
-      <p class="small muted">Theo tài liệu lý thuyết của chương trình.<sup class="c" data-s="ct_lythuyet"></sup></p>
-    </div>
-    <div class="tool timer" id="slow">
-      <h3>Bữa ăn chậm 20 phút</h3>
-      <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="tr" cx="60" cy="60" r="52"/><circle class="fg" id="ring-fg" cx="60" cy="60" r="52" stroke-dasharray="326.73" stroke-dashoffset="0"/></svg><div class="t"><b id="ring-t">20:00</b><span id="ring-s">sẵn sàng</span></div></div>
-      <p class="prompt" id="slow-prompt" aria-live="polite">Bấm bắt đầu khi ngồi vào bàn. Mỗi vài phút trang sẽ nhắc bạn một điều nhỏ.</p>
-      <div class="btnrow"><button class="btn primary" id="slow-go">Bắt đầu</button><button class="btn ghost" id="slow-reset">Làm lại</button></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= 8. LỢI ÍCH VÀ AN TOÀN ================= -->
-<section id="loi-ich" class="chapter">
-  <div class="chapter-head">
-    <span class="eyebrow">Phần 8 · Lợi ích và an toàn</span>
-    <h2>Lợi ích, và cách đọc cho đúng</h2>
-    <p class="lede">Tài liệu liệt kê nhiều lợi ích của nhịn ăn đúng cách. Mỗi lợi ích dưới đây kèm mức bằng chứng hiện có, để bạn biết điều gì đã đo được ở người, điều gì còn là kinh nghiệm.</p>
-  </div>
-  <div class="evlegend" id="evlegend"></div>
-  <div class="grid g3" id="benefits"></div>
-  <div class="lead">
-    <figure><img src="img/c_benefit.jpg" data-ph="sun" alt="Minh hoạ người phụ nữ giãn cơ nhẹ nhàng trên ban công buổi sáng" loading="lazy" onerror="ph(this)"></figure>
-    <div class="card">
-      <h3>Nghiên cứu lớn nhất đến nay nói gì?</h3>
-      <p>1.422 người nhịn 4–21 ngày tại phòng khám Buchinger Wilhelmi (Đức), mỗi ngày khoảng 200–250 kcal, có bác sĩ theo dõi:<sup class="c" data-s="buchinger2019"></sup></p>
-      <ul>
-        <li>Cân nặng, vòng bụng, huyết áp giảm rõ.</li>
-        <li>Đường huyết về mức thấp của bình thường, ketone tăng.</li>
-        <li>93,2% không thấy đói; dưới 1% gặp tác dụng phụ.</li>
-      </ul>
-      <p class="small muted"><b>Đọc cho đúng:</b> nghiên cứu quan sát, không có nhóm đối chứng, làm tại phòng khám chuyên nhịn ăn, với người được sàng lọc trước. Kết quả không có nghĩa là tự nhịn ở nhà cũng an toàn như vậy.</p>
-    </div>
-  </div>
-  <div class="grid g2">
-    <div class="card">
-      <h3>Ai không nên tự nhịn</h3>
-      <ul>
-        <li>Phụ nữ mang thai, đang cho con bú; trẻ dưới 18 tuổi.<sup class="c" data-s="ct_lythuyet"></sup></li>
-        <li>Người suy dinh dưỡng, quá nhẹ cân.<sup class="c" data-s="ct_lythuyet"></sup></li>
-        <li>Người mắc một số bệnh thoái hoá thần kinh hay một số loại ung thư.<sup class="c" data-s="ct_lythuyet"></sup></li>
-        <li>Người dùng insulin hoặc thuốc hạ đường huyết: nguy cơ hạ đường huyết, cần bác sĩ chỉnh thuốc.<sup class="c" data-s="grajower2019"></sup></li>
-        <li>Người đang hoặc từng bị rối loạn ăn uống.<sup class="c" data-s="buchinger2013"></sup></li>
-      </ul>
-      <a class="btn ghost sm" href="#screen" style="justify-self:start">Làm bài kiểm tra an toàn</a>
-    </div>
-    <div class="card danger">
-      <h3>Dấu hiệu phải dừng</h3>
-      <p style="color:var(--ink)">Ngất, đau ngực, tim đập loạn, lú lẫn, nôn liên tục, run vã mồ hôi lạnh: dừng nhịn và đi khám.</p>
-      <a class="btn ghost sm" href="#dung" style="justify-self:start">Xem đủ danh sách</a>
-    </div>
-  </div>
-  <blockquote>Hãy nhớ rằng, cơ thể chúng ta không chỉ cần được thanh lọc, mà còn cần được chăm sóc thận trọng, hợp lý và thương yêu. Hãy lắng nghe cơ thể mình và thực hành nhịn ăn một cách an toàn, có ý thức.<cite>Tài liệu lý thuyết về nhịn ăn<sup class="c" data-s="ct_lythuyet"></sup></cite></blockquote>
-</section>
-
-<!-- ================= 9. LỊCH SỬ ================= -->
-<section id="lich-su" class="chapter">
-  <div class="chapter-head">
-    <span class="eyebrow">Phần 9 · Lịch sử</span>
-    <h2>Nhịn ăn qua các thời kỳ</h2>
-    <p class="lede">Nhịn ăn có lẽ là thực hành chăm sóc sức khoẻ lâu đời nhất, và đơn giản nhất: không cần làm gì cả.<sup class="c" data-s="ct_lythuyet"></sup></p>
-  </div>
-  <div class="lead">
-    <figure><img src="img/c_history.jpg" data-ph="leaf" alt="Minh hoạ người tiền sử hái lượm trong cảnh mùa thu" loading="lazy" onerror="ph(this)"></figure>
-    <div class="card">
-      <h3>Con người hiện đại ăn vì đâu?</h3>
-      <p>Ta thường ăn ba bữa mỗi ngày, thêm bữa xế, ăn vặt lai rai, có khi cả ban đêm, và mất kết nối với cảm giác đói, no. Ta còn hay ăn vì những lý do không phải đói:<sup class="c" data-s="ct_lythuyet"></sup></p>
-      <div class="chips" id="why-eat"></div>
-      <p>Cơ thể vẫn mang sẵn mọi “lập trình” để thích ứng khi vắng thức ăn; vì lâu không dùng tới, nó cần được đánh thức dần.<sup class="c" data-s="ct_lythuyet"></sup></p>
-    </div>
-  </div>
-  <div class="grid" style="gap:12px">
-    <div class="chips" id="tl-filter" role="group" aria-label="Lọc theo thời kỳ"></div>
-    <ol class="tl" id="timeline"></ol>
-  </div>
-</section>
-
-<!-- ================= NGUỒN ================= -->
-<section id="nguon" class="chapter">
-  <div class="chapter-head">
-    <span class="eyebrow">Tham khảo</span>
-    <h2>Nguồn</h2>
-    <p class="lede">Số nhỏ trên trang dẫn tới đây. Bốn nguồn đầu là tài liệu nội bộ của chương trình.</p>
-  </div>
-  <ol class="src" id="sources"></ol>
+  <blockquote>Hãy nhớ rằng, cơ thể chúng ta không chỉ cần được thanh lọc, mà còn cần được chăm sóc thận trọng, hợp lý và thương yêu.<cite>Tài liệu lý thuyết về nhịn ăn</cite></blockquote>
 </section>
 
 <footer>
-  <span>Tổng hợp ngày 15/10/2026 từ tài liệu của chương trình nhịn ăn, đối chiếu với các nguồn ở mục Nguồn. Ảnh minh hoạ được tạo bằng AI.</span>
-  <span>Trang dùng cho mục đích giáo dục, không thay thế tư vấn của bác sĩ. Nhịn ăn nên có người hướng dẫn theo sát. Lịch và ghi chú của bạn chỉ lưu trên trình duyệt của bạn.</span>
+  <span>Tổng hợp từ tài liệu của chương trình: tin nhắn tuần chuẩn bị, bộ ảnh hướng dẫn Ngày 1, bộ ảnh về insulin và tài liệu lý thuyết về nhịn ăn. Ảnh minh hoạ tạo bằng AI.</span>
+  <span>Trang không thay thế người hướng dẫn hay bác sĩ. Lịch, nhật ký và ghi chú của bạn chỉ lưu trên trình duyệt của bạn.</span>
 </footer>
 </main>
 
-<script src="data.js?v=5e1e814d"></script>
-<script src="app.js?v=25d5ae4b"></script>
+<script src="data.js?v=849b5def"></script>
+<script src="app.js?v=d4af9433"></script>
 </body>
 </html>

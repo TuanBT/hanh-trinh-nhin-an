@@ -1,4 +1,4 @@
-/* Hành trình Nhịn ăn: lịch theo giờ, tra cứu món, biểu đồ và các công cụ nhỏ.
+/* Hành trình Nhịn ăn: lịch theo giờ, theo dõi nước và cảm nhận, tra cứu món và các công cụ nhỏ.
    Nội dung nằm ở data.js (window.NA). Mọi thứ người xem nhập chỉ lưu trong localStorage của họ. */
 (function () {
 'use strict';
@@ -20,7 +20,6 @@ const IC = {
   leaf: '<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15"/><path d="M5 19c3-4 6-7 10-9"/>',
   pulse: '<path d="M3 12h4l2-6 4 12 2-6h6"/>',
   list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>',
-  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   apple: '<path d="M12 7.5c-2-1.5-7-1.3-7 4 0 4 3 8.5 5 8.5 1 0 1.3-.5 2-.5s1 .5 2 .5c2 0 5-4.5 5-8.5 0-5.3-5-5.5-7-4z"/><path d="M12 7.5c0-2 1-3.5 3-4.5"/>',
@@ -38,8 +37,10 @@ const IC = {
   chili: '<path d="M15 7c-4.5 1-8.5 6-11.5 13 6.5-2 12.5-6 13.5-10.5"/><path d="M15 7c.5-2 2.5-3.5 4.5-3.5M17 9.5c-.5-1.5-1-2.5-2-2.5"/>',
   sugar: '<path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>',
   mushroom: '<path d="M3 12a9 7 0 0 1 18 0z"/><path d="M9 12v6a3 3 0 0 0 6 0v-6"/>',
+  book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/>',
+  mouth: '<path d="M4 12c2.5-3 13.5-3 16 0-2.5 4-13.5 4-16 0z"/><path d="M4 12h16"/>',
+  eye: '<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/>',
   alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
-  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
   heart: '<path d="M12 20s-7-4.4-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.6-9 9-9 9z"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
@@ -69,19 +70,6 @@ window.ph = makePh;
 (window.phq || []).forEach(makePh);
 window.phq = [];
 const img = (name, alt, ph) => `<img src="img/${name}.jpg" data-ph="${ph || 'leaf'}" alt="${esc(alt)}" loading="lazy" onerror="ph(this)">`;
-
-/* ---------- trích nguồn ---------- */
-const SRC = {};
-D.SOURCES.forEach((s, i) => { SRC[s.id] = i + 1; });
-const cite = ids => ids ? `<sup class="c" data-s="${ids}"></sup>` : '';
-function fillCites(root) {
-  $$('sup.c[data-s]', root).forEach(el => {
-    if (el.dataset.done) return;
-    el.dataset.done = '1';
-    el.innerHTML = el.dataset.s.split(',').map(x => x.trim()).filter(x => SRC[x])
-      .sort((a, b) => SRC[a] - SRC[b]).map(x => `<a href="#src-${x}">${SRC[x]}</a>`).join(',');
-  });
-}
 
 let toastT;
 function toast(msg) {
@@ -133,32 +121,30 @@ function whenLabel(t, now, lower) {
 
 /* =====================================================================
    LỊCH CỦA BẠN
-   Mốc thời gian: S = ăn xong bữa cuối (bắt đầu nhịn), E = bữa phá nhịn.
-   Ngày giảm ăn = ngày của S; tuần chuẩn bị = 7 ngày trước đó; ăn lại R ngày tuỳ độ dài.
+   Mốc thời gian: S = ăn xong bữa cuối của Ngày 1 (bắt đầu nhịn), E = bữa phá nhịn.
+   Ngày 1 (giảm ăn) = ngày của S; tuần chuẩn bị = 7 ngày trước đó.
    ===================================================================== */
 const DEF_M = ['07:00', '12:00', '18:30'];
+const DEF_EAT = [1, 1]; /* Ngày 1 có ăn bữa sáng, bữa trưa (chỉ ăn các bữa chính như bạn quen) */
 const MK = { sang: 0, trua: 1, toi: 2 };
 const MEALN = { sang: 'Bữa sáng', trua: 'Bữa trưa', toi: 'Bữa tối' };
-const refeedDays = H => H <= 40 ? 1 : H <= 64 ? 2 : H <= 112 ? 3 : 4;
+const MAX_H = 72;
+const slotOf = d => { const m = d.getHours() * 60 + d.getMinutes(); return m < 630 ? 'sang' : m < 900 ? 'trua' : 'toi'; };
 const PREP_EV = [
-  [-7, '20:00', 'Bắt đầu tuần chuẩn bị', 'Làm bài kiểm tra an toàn. Báo kế hoạch cho gia đình, đồng nghiệp; nhờ người nấu thay nếu cần.', '#screen'],
-  [-6, '20:00', 'Viết ra: vì sao mình nhịn lần này?', 'Và ý nghĩa của quyết định này ở thời điểm hiện tại.', '#why-tool'],
-  [-5, '20:00', 'Đọc phần lý thuyết', 'Insulin, tự thực, nhai kỹ (Phần 5–7).', '#insulin'],
-  [-4, '09:00', 'Mua đồ cần thiết', 'Rau củ quả, dầu ép lạnh, hạt (bắt buộc); magie, trà xanh, muối biển, tinh dầu bạc hà.', '#chuan-bi'],
-  [-3, '09:00', 'Giảm dần cà phê, đường, rượu bia', 'Gợi ý thêm: bỏ dần từ bây giờ cho đỡ đau đầu khi ngừng hẳn.', ''],
-  [-2, '20:00', 'Thu xếp công việc, chuẩn bị “thức ăn tinh thần”', 'Sách, phim hay, việc nhẹ nhàng mình thích cho những ngày nhịn.', ''],
-  [-1, '08:00', 'Nấu nước hầm xương gà', 'Lửa nhỏ, ninh chậm 6–8 tiếng với hành tây, cà rốt, củ cải, cần tây, giấm táo.', '#chuan-bi'],
-  [-1, '20:00', 'Sơ chế rau củ cho ngày mai, ngủ sớm', 'Ngày mai là ngày giảm ăn.', '#giam-an']
+  [-7, '20:00', 'Bắt đầu tuần chuẩn bị', 'Lên kế hoạch cá nhân: báo cho gia đình, đồng nghiệp ở gần; nhờ người nấu thay nếu bạn là người đứng bếp.', '#chuan-bi'],
+  [-6, '20:00', 'Tự hỏi: vì sao mình nhịn lần này?', 'Và ý nghĩa của quyết định này ở thời điểm hiện tại. Viết ra để trang nhắc lại lúc khó.', '#why-tool'],
+  [-5, '20:00', 'Đọc kỹ tài liệu lý thuyết', 'Insulin, ba nguồn năng lượng khi nhịn, tự thực, nhai kỹ.', '#hieu-them'],
+  [-4, '09:00', 'Mua đồ cần thiết', 'Bắt buộc: rau củ quả tươi, dầu ép lạnh, hạt. Nên có: magie, trà xanh, muối biển, tinh dầu bạc hà.', '#do-can-co'],
+  [-2, '20:00', 'Thu xếp công việc, chuẩn bị “thức ăn tinh thần”', 'Để không bị quá tải khi tham gia; chuẩn bị sách, phim hay, việc nhẹ nhàng mình thích.', '#chuan-bi'],
+  [-1, '08:00', 'Nấu nước hầm xương gà', 'Lửa nhỏ, nấu chậm 6–8 tiếng với hành tây, cà rốt, củ cải, cần tây và giấm táo, để kịp dùng bữa sáng Ngày 1.', '#nuoc-ham'],
+  [-1, '20:00', 'Mai là Ngày 1: ngày giảm ăn', 'Chuẩn bị rau củ quả cho ngày mai. Từ mai ngừng tám nhóm thực phẩm trong danh sách.', '#ngay-1']
 ];
 
 function model(p) {
-  const S = parseDT(p.b), E = parseDT(p.k), M = p.m && p.m.length === 3 ? p.m : DEF_M;
-  const H = (E - S) / 36e5, R = refeedDays(H);
-  const stages = [1, 2, 3, 4].slice(0, R);
-  const maxSt = R === 1 ? 2 : R;
-  const D1 = sod(S);
-  const rStart = E.getHours() < 15 ? sod(E) : addDays(sod(E), 1);
-  const rEnd = addDays(rStart, R);
+  const S = parseDT(p.b), E = parseDT(p.k);
+  const M = p.m && p.m.length === 3 ? p.m : DEF_M;
+  const eat = p.e && p.e.length === 2 ? p.e : DEF_EAT;
+  const H = (E - S) / 36e5, D1 = sod(S);
   const ev = [];
   const add = (t, type, title, text, x) => ev.push(Object.assign({ t, type, title, text: text || '' }, x || {}));
 
@@ -169,49 +155,36 @@ function model(p) {
     if (t >= since && t < D1) add(t, 'prep', x[2], x[3], { link: x[4], key: 1 });
   });
 
-  /* ngày giảm ăn: bữa cuối kết thúc lúc S */
-  const last = addMin(S, -45);
-  const meals = ['sang', 'trua'].map(k => [k, at(D1, M[MK[k]])]).filter(m => m[1] <= addMin(last, -180));
-  if (meals.length) add(addMin(meals[0][1], -30), 'drink', 'Thức dậy: một cốc nước ấm', 'Hôm nay uống 1,5–2 lít nước trắng, chia đều trong ngày.');
-  meals.forEach(m => add(m[1], 'meal', MEALN[m[0]] + ' · ngày giảm ăn', D.MENUS[m[0]].eat, { menu: m[0], key: 1 }));
+  /* Ngày 1: bữa cuối kết thúc lúc S */
+  const last = addMin(S, -45), lastSlot = slotOf(last);
+  const meals = ['sang', 'trua'].filter(k => eat[MK[k]]).map(k => [k, at(D1, M[MK[k]])]).filter(m => m[1] <= addMin(last, -180));
+  const first = meals.length ? meals[0][1] : last;
+  if (addMin(first, -30) >= D1) add(addMin(first, -30), 'drink', 'Bắt đầu Ngày 1: ngày giảm ăn', 'Uống 1,5–2 lít nước trắng trong ngày; chỉ ăn bữa chính, không ăn vặt; ngừng tám nhóm thực phẩm trong danh sách.', { key: 1, link: '#ngay-1' });
+  meals.forEach(m => add(m[1], 'meal', MEALN[m[0]] + ' · Ngày 1', D.MENUS[m[0]].eat, { menu: m[0], key: 1 }));
   if (meals.length) ['10:00', '15:30'].forEach(h => {
     const t = at(D1, h);
-    if (t > meals[0][1] && t < addMin(last, -60)) add(t, 'do', 'Không ăn vặt', 'Thèm thì uống nước, đi lại một chút. Chỉ ăn các bữa chính.');
+    if (t > meals[0][1] && t < addMin(last, -60)) add(t, 'do', 'Không ăn vặt', 'Tuyệt đối không ăn vặt giữa các bữa. Nhớ uống nước.');
   });
-  add(last, 'meal', last.getHours() >= 15 ? 'Bữa tối · bữa cuối trước khi nhịn' : 'Bữa cuối trước khi nhịn', D.MENUS.toi.eat, { menu: 'toi', key: 1 });
+  add(last, 'meal', MEALN[lastSlot] + ' · bữa cuối trước khi nhịn', D.MENUS[lastSlot].eat, { menu: lastSlot, key: 1 });
 
   /* những giờ nhịn */
-  add(S, 'body', 'Bắt đầu nhịn', 'Từ giờ chỉ uống nước. Lắng nghe cơ thể; khó chịu thì mở Hộp hỗ trợ.', { key: 1 });
+  add(S, 'body', 'Bắt đầu nhịn', 'Từ giờ không ăn, uống nước trắng đều. Lắng nghe cơ thể; khó chịu thì xem Hộp hỗ trợ.', { key: 1, link: '#ho-tro' });
   D.MILESTONES.forEach(m => {
     const t = new Date(S.getTime() + m.h * 36e5);
     if (t < addMin(E, -60)) add(t, 'body', m.t, m.d, { key: 1 });
   });
   for (let day = sod(S); day <= E; day = addDays(day, 1)) {
     D.ROUTINE.forEach(r => {
-      const t = addMin(r.at in MK ? at(day, M[MK[r.at]]) : at(day, r.at), r.off || 0);
+      if (r.at === 'sang' || r.at === 'trua') { if (!eat[MK[r.at]]) return; } /* bữa không quen ăn thì không nhắc */
+      const t = r.at in MK ? at(day, M[MK[r.at]]) : at(day, r.at);
       if (t > addMin(S, 60) && t < addMin(E, -60)) add(t, r.type, r.t, r.d);
     });
   }
 
-  /* ăn lại */
-  if (addMin(E, -30) > S) add(addMin(E, -30), 'do', 'Chuẩn bị bữa phá nhịn', 'Hấp hoặc nướng một quả táo, hoặc nấu bát súp rau nhừ.');
-  add(E, 'meal', D.REFEED.first.t, D.REFEED.first.d, { key: 1, stage: 1 });
-  stages.forEach((st, i) => {
-    const day = addDays(rStart, i);
-    ['sang', 'trua', 'toi'].forEach(k => {
-      const t = at(day, M[MK[k]]);
-      if (t < addMin(E, 180)) return;
-      const s2 = R === 1 && k === 'toi' ? 2 : st;
-      add(t, 'meal', MEALN[k] + ' · ăn lại ngày ' + (i + 1), D.REFEED.menus[s2][k], { key: 1, stage: s2 });
-    });
-    const w = at(day, '15:00');
-    if (w > addMin(E, 60)) add(w, 'drink', 'Uống nước đều', 'Vẫn giữ 1,5–2 lít nước mỗi ngày.');
-  });
-  add(at(addDays(rStart, R - 1), '20:30'), 'do', 'Hoàn thành hành trình',
-    `Những ngày tới: thêm lại dần theo bậc ${maxSt + 1} đến 5 ở Phần 4; để đường, đồ chiên rán, rượu bia sau cùng. Giữ thói quen không ăn vặt, nhai kỹ.`, { key: 1 });
-
+  /* phá nhịn */
+  add(E, 'meal', D.BREAK.t, D.BREAK.d, { key: 1, link: '#pha-nhin' });
   ev.sort((a, b) => a.t - b.t);
-  return { S, E, M, H, R, stages, maxSt, D1, rStart, rEnd, ev };
+  return { S, E, M, eat, H, D1, ev };
 }
 
 function phaseAt(md, now) {
@@ -222,24 +195,21 @@ function phaseAt(md, now) {
     const h = (now - md.S) / 36e5;
     return { k: 'fast', h, ph: D.PHASES.find(p => h >= p.from && h < p.to) };
   }
-  if (now < md.rEnd) {
-    const i = Math.min(md.R, Math.max(1, dayDiff(now, md.rStart) + 1));
-    return { k: 'refeed', i, st: md.R === 1 && now.getHours() >= 15 && now > addMin(md.E, 180) ? 2 : md.stages[i - 1] };
-  }
   return { k: 'done' };
 }
 
-let plan = null, demo = false, editing = false;
+let plan = null, demo = false, editing = false, trackKind = null, trackDay = '';
 
 function validPlan(p) {
   const S = p && parseDT(p.b), E = p && parseDT(p.k);
-  return !!(S && E && E - S >= 12 * 36e5 && E - S <= 240 * 36e5);
+  return !!(S && E && E - S >= 12 * 36e5 && E - S <= MAX_H * 36e5);
 }
 function loadPlan() {
   const q = new URLSearchParams(location.search);
   if (q.get('b') && q.get('k')) {
     const m = (q.get('m') || '').split('-').map(fixHM);
-    const p = { b: q.get('b'), k: q.get('k'), m: m.length === 3 && m.every(Boolean) ? m : DEF_M.slice(), c: Date.now() };
+    const e = /^[01]{2}$/.test(q.get('e') || '') ? q.get('e').split('').map(Number) : DEF_EAT.slice();
+    const p = { b: q.get('b'), k: q.get('k'), m: m.length === 3 && m.every(Boolean) ? m : DEF_M.slice(), e, c: Date.now() };
     if (validPlan(p)) {
       const old = store.get('na-plan', null);
       if (old && old.b === p.b && old.k === p.k) return old;
@@ -270,18 +240,16 @@ function menuBox(key, title) {
 
 function journeyHTML(md, ps, now) {
   const segs = [
-    { k: 'prep', n: 'Chuẩn bị', a: addDays(md.D1, -7), b: md.D1, w: 14, c: 'var(--brown)' },
-    { k: 'd1', n: 'Giảm ăn', a: md.D1, b: md.S, w: 14, c: 'var(--amber)' },
-    { k: 'fast', n: 'Nhịn · ' + Math.round(md.H) + ' giờ', a: md.S, b: md.E, w: 52, c: 'var(--sage)' },
-    { k: 'refeed', n: 'Ăn lại · ' + md.R + ' ngày', a: md.E, b: md.rEnd, w: 20, c: 'var(--indigo)' }
+    { k: 'prep', n: 'Chuẩn bị', a: addDays(md.D1, -7), b: md.D1, w: 18, c: 'var(--brown)' },
+    { k: 'd1', n: 'Ngày 1 · giảm ăn', a: md.D1, b: md.S, w: 18, c: 'var(--amber)' },
+    { k: 'fast', n: 'Nhịn · ' + Math.round(md.H) + ' giờ', a: md.S, b: md.E, w: 64, c: 'var(--sage)' }
   ];
   const cur = ps.k === 'far' || ps.k === 'done' ? '' : ps.k;
-  const where = (segs.find(s => s.k === cur) || { n: ps.k === 'done' ? 'hoàn thành' : 'trước tuần chuẩn bị' }).n;
+  const where = (segs.find(s => s.k === cur) || { n: ps.k === 'done' ? 'đã phá nhịn' : 'trước tuần chuẩn bị' }).n;
   return `<div class="journey" role="img" aria-label="Bạn đang ở chặng: ${esc(where)}">` +
     segs.map(s => {
       const f = Math.max(0, Math.min(1, (now - s.a) / (s.b - s.a)));
-      let ticks = '';
-      if (s.k === 'fast') ticks = [12, 24, 48, 72, 96].filter(h => h < md.H - 2).map(h => `<span class="tk" style="left:${(h / md.H * 100).toFixed(2)}%"></span>`).join('');
+      const ticks = s.k === 'fast' ? [12, 24, 48].filter(h => h < md.H - 2).map(h => `<span class="tk" style="left:${(h / md.H * 100).toFixed(2)}%"></span>`).join('') : '';
       const mark = s.k === cur ? `<span class="jmark" style="left:${(f * 100).toFixed(2)}%"></span>` : '';
       return `<div class="jseg" style="flex:${s.w} 1 0; --jc:${s.c}"><div class="bar"><i style="width:${(f * 100).toFixed(2)}%"></i>${ticks}</div>${mark}</div>`;
     }).join('') + '</div><div class="jlegend" aria-hidden="true">' +
@@ -292,52 +260,42 @@ function phaseHTML(md, ps, now) {
   if (ps.k === 'far' || ps.k === 'prep') {
     const pr = prepProgress();
     return `<div class="phase" style="--pc:var(--brown)"><div class="phase-h"><span class="dotc"></span><h3>Tuần chuẩn bị</h3></div>
-      <p>Cho tâm trí sự bảo đảm rằng mọi chuyện sẽ ổn. Sắp xếp gia đình, công việc; mua đồ; đọc tài liệu.${cite('ct_chuanbi')}</p>
+      <p>Cho tâm trí sự bảo đảm rằng mọi chuyện sẽ ổn. Sắp xếp gia đình, công việc; mua đồ; đọc tài liệu.</p>
       <dl><dt>Danh sách chuẩn bị · ${pr.done}/${pr.total} việc</dt><dd><div class="prog"><i style="width:${pr.pct}%"></i></div></dd></dl>
-      ${whyBox(true)}<div class="btnrow"><a class="btn ghost sm" href="#chuan-bi">Mở danh sách chuẩn bị</a><a class="btn ghost sm" href="#screen">Kiểm tra an toàn</a></div></div>`;
+      ${whyBox(true)}<div class="btnrow"><a class="btn ghost sm" href="#prep">Mở danh sách chuẩn bị</a><a class="btn ghost sm" href="#khong-nen">Ai không nên nhịn</a></div></div>`;
   }
   if (ps.k === 'd1') {
     const nx = md.ev.find(e => e.menu && e.t > addMin(now, -45));
-    return `<div class="phase" style="--pc:var(--amber)"><div class="phase-h"><span class="dotc"></span><h3>Ngày giảm ăn</h3></div>
-      <p>${esc(D.DAY1.goal)}${cite('ct_ngay1')}</p>
+    return `<div class="phase" style="--pc:var(--amber)"><div class="phase-h"><span class="dotc"></span><h3>Ngày 1 · giảm ăn</h3></div>
+      <p>${esc(D.DAY1.goal)}</p>
       ${nx ? menuBox(nx.menu, nx.title + ' · ' + hm(nx.t)) : ''}
-      <dl><dt>Cả ngày</dt><dd><ul>${D.DAY1.rules.map(r => `<li>${r.t}. ${r.d}</li>`).join('')}</ul></dd></dl>
-      <div class="btnrow"><a class="btn ghost sm" href="#finder">Món này ăn được không?</a></div></div>`;
+      <dl><dt>Cả ngày</dt><dd><ul>${D.DAY1.rules.map(r => `<li>${esc(r.t)}. ${esc(r.d)}</li>`).join('')}</ul></dd></dl>
+      <div class="btnrow"><a class="btn ghost sm" href="#finder">Món này ăn được không?</a><a class="btn ghost sm" href="#slow">Đồng hồ ăn chậm</a></div></div>`;
   }
   if (ps.k === 'fast') {
     const p = ps.ph;
-    return `<div class="phase" style="--pc:var(--${p.fuel})"><div class="phase-h"><span class="dotc"></span><h3>${p.name}</h3><span class="tag">giờ ${p.from}${p.to === Infinity ? '+' : '–' + p.to}</span></div>
-      <p>${p.body}${cite(p.s)}</p>
-      <dl><dt>Có thể thấy</dt><dd class="chips">${p.feel.map(f => `<span class="chip static">${f}</span>`).join('')}</dd>
-      <dt>Nên làm</dt><dd><ul>${p.todo.map(t => `<li>${t}</li>`).join('')}</ul></dd></dl>
+    return `<div class="phase" style="--pc:var(--${p.c})"><div class="phase-h"><span class="dotc"></span><h3>${esc(p.name)}</h3><span class="tag">giờ ${p.from}${p.to === Infinity ? '+' : '–' + p.to}</span></div>
+      <p>${esc(p.body)}</p><p><b>Theo tài liệu:</b> ${esc(lc(p.feel))}</p>
+      <dl><dt>Lúc này</dt><dd><ul>${D.DURING.map(x => `<li>${esc(x.t)}. ${esc(x.d)}</li>`).join('')}</ul></dd></dl>
       ${p.from >= 12 ? whyBox(false) : ''}
-      <div class="btnrow"><a class="btn ghost sm" href="#ho-tro">Khó chịu? Hộp hỗ trợ</a><a class="btn ghost sm" href="#dung">Dấu hiệu phải dừng</a></div></div>`;
+      <div class="btnrow"><a class="btn ghost sm" href="#ho-tro">Khó chịu? Hộp hỗ trợ</a><a class="btn ghost sm" href="#bao-ngay">Khi nào báo người hướng dẫn</a></div></div>`;
   }
-  if (ps.k === 'refeed') {
-    const L = D.LADDER[ps.st - 1];
-    const today = md.ev.filter(e => e.type === 'meal' && e.t >= md.E && sameDay(e.t, now));
-    return `<div class="phase" style="--pc:var(--indigo)"><div class="phase-h"><span class="dotc"></span><h3>Ăn lại · ${lc(L.n)}</h3></div>
-      <p>${L.t}. Ăn ít, ăn chậm, nhai kỹ; dừng khi vừa đủ no.</p>
-      ${today.length ? `<dl><dt>Hôm nay</dt><dd><ul>${today.map(e => `<li><b>${hm(e.t)} ${esc(e.title.split(' · ')[0])}:</b> ${esc(e.text)}</li>`).join('')}</ul></dd></dl>` : ''}
-      <div class="btnrow"><a class="btn ghost sm" href="#an-lai">Hướng dẫn ăn lại</a><a class="btn ghost sm" href="#finder">Tra món</a></div></div>`;
-  }
-  return `<div class="phase" style="--pc:var(--sage)"><div class="phase-h"><span class="dotc"></span><h3>Giữ lại thói quen tốt</h3></div>
-    <ul>${D.REFEED.keep.map(k => `<li>${k.t}${cite(k.s)}</li>`).join('')}</ul>
-    <p>Những ngày tới, thêm lại dần theo bậc ${md.maxSt + 1} đến 5; đường, đồ chiên rán, rượu bia để sau cùng.</p>
+  return `<div class="phase" style="--pc:var(--sage)"><div class="phase-h"><span class="dotc"></span><h3>Đã phá nhịn</h3></div>
+    <p>${esc(D.BREAK.d)}</p>
+    <dl><dt>Giữ lại thói quen tốt</dt><dd><ul>${D.KEEP.map(k => `<li>${esc(k)}</li>`).join('')}</ul></dd></dl>
     <div class="btnrow"><button class="btn ghost sm" data-act="edit">Lập lịch cho lần nhịn mới</button></div></div>`;
 }
 
 function dayLabel(md, d) {
   if (d < md.D1) return 'Chuẩn bị';
-  if (sameDay(d, md.D1)) return 'Ngày giảm ăn, bắt đầu nhịn';
-  if (d < md.rStart) return sameDay(d, md.E) ? 'Nhịn, phá nhịn lúc ' + hm(md.E) : 'Nhịn · ngày ' + dayDiff(d, md.D1);
-  if (d < md.rEnd) return 'Ăn lại · ngày ' + (dayDiff(d, md.rStart) + 1);
-  return '';
+  if (sameDay(d, md.D1)) return 'Ngày 1 · giảm ăn, bắt đầu nhịn';
+  if (sameDay(d, md.E)) return 'Nhịn, phá nhịn lúc ' + hm(md.E);
+  return 'Nhịn · ngày ' + dayDiff(d, md.D1);
 }
 function menuDetail(e) {
   if (!e.menu) return '';
   const m = D.MENUS[e.menu];
-  return `<div class="menu">${m.groups.map(g => D.GROUPS[g].n).join(' · ')}${m.except ? ' · ' + m.except.toLowerCase() : ''}. ${esc(m.notes.join(' '))}</div>`;
+  return `<div class="menu">${m.groups.map(g => D.GROUPS[g].n).join(' · ')}${m.except ? ' · ' + lc(m.except) : ''}. ${esc(m.notes.join(' '))}</div>`;
 }
 function scheduleHTML(md, now, keep) {
   const groups = [];
@@ -346,10 +304,8 @@ function scheduleHTML(md, now, keep) {
     if (!groups.length || groups[groups.length - 1].k !== k) groups.push({ k, d: sod(e.t), ev: [] });
     groups[groups.length - 1].ev.push(e);
   });
-  const nextIdx = md.ev.findIndex(e => e.t > now);
-  const nextEv = md.ev[nextIdx];
-  const allOpen = keep ? keep.all : false;
-  return `<details class="more" id="sched-all"${allOpen ? ' open' : ''}><summary>Lịch đầy đủ theo ngày · ${md.ev.length} mục</summary><div class="in sched-wrap">` +
+  const nextEv = md.ev.find(e => e.t > now);
+  return `<details class="more" id="sched-all"${keep && keep.all ? ' open' : ''}><summary>Lịch đầy đủ theo ngày · ${md.ev.length} mục</summary><div class="in sched-wrap">` +
     groups.map(g => {
       const today = sameDay(g.d, now);
       const open = keep && keep.days ? keep.days.indexOf(g.k) > -1 : today;
@@ -360,93 +316,89 @@ function scheduleHTML(md, now, keep) {
 }
 
 function renderTracker(keepState) {
-  const body = $('#trk-body');
+  const box = $('#trk-now'), sched = $('#trk-sched');
   if (!plan || editing) {
     /* đang ở biểu mẫu: chỉ vẽ lại khi được gọi chủ động, để không xoá giờ người xem đang nhập */
-    if (!keepState || !$('#setup', body)) renderSetup(body);
+    if (!keepState || !$('#setup', box)) { renderSetup(box); sched.innerHTML = ''; renderTrack(); }
     return;
   }
   let keep = null;
-  if (keepState) {
-    const all = $('#sched-all');
-    keep = { all: !!(all && all.open), days: $$('details.day[open]', body).map(d => d.dataset.k) };
-    if (!all) keep = null;
-  }
+  const all = $('#sched-all');
+  if (keepState && all) keep = { all: all.open, days: $$('details.day[open]', sched).map(d => d.dataset.k) };
   const md = model(plan), now = new Date(), ps = phaseAt(md, now);
   let big = '', sub = '';
   if (ps.k === 'far' || ps.k === 'prep') {
     const n = dayDiff(md.D1, now);
-    big = n === 1 ? 'Mai là ngày giảm ăn' : 'Còn ' + n + ' ngày';
-    sub = `${n === 1 ? '' : 'tới ngày giảm ăn (<b>' + dayName(md.D1) + '</b>). '}Bắt đầu nhịn <b>${whenLabel(md.S, now, 1)}</b>, ăn lại <b>${whenLabel(md.E, now, 1)}</b>.`;
+    big = n === 1 ? 'Mai là Ngày 1' : 'Còn ' + n + ' ngày';
+    sub = `${n === 1 ? '' : 'tới Ngày 1, ngày giảm ăn (<b>' + dayName(md.D1) + '</b>). '}Bắt đầu nhịn <b>${whenLabel(md.S, now, 1)}</b>, phá nhịn <b>${whenLabel(md.E, now, 1)}</b>.`;
   } else if (ps.k === 'd1') {
-    big = 'Ngày giảm ăn';
+    big = 'Ngày 1 · giảm ăn';
     sub = `Bắt đầu nhịn lúc <b>${hm(md.S)}</b> (${rel(md.S, now)}). Chỉ ăn bữa chính, không ăn vặt.`;
   } else if (ps.k === 'fast') {
     big = 'Giờ thứ ' + (Math.floor(ps.h) + 1);
     sub = `Đã nhịn <b>${dur(now - md.S)}</b> · còn <b>${dur(md.E - now)}</b> tới bữa phá nhịn (${whenLabel(md.E, now, 1)}).`;
-  } else if (ps.k === 'refeed') {
-    big = 'Ăn lại · ngày ' + ps.i;
-    sub = (md.R > 1 ? `Ngày ${ps.i}/${md.R}. ` : '') + `Đã nhịn ${Math.round(md.H)} giờ, phá nhịn ${whenLabel(md.E, now, 1)}.`;
   } else {
     big = 'Hoàn thành';
-    sub = `Bạn đã đi hết hành trình ${Math.round(md.H)} giờ nhịn (${dayName(md.S)} – ${dayName(md.E)}).`;
+    sub = `Bạn đã nhịn ${Math.round(md.H)} giờ (${dayName(md.S)} ${hm(md.S)} – ${dayName(md.E)} ${hm(md.E)}).`;
   }
   const up = md.ev.filter(e => e.t > now).slice(0, 4);
   const upHTML = up.length ? `<ol class="up">${up.map((e, i) => `<li class="t-${e.type}${i === 0 ? ' first' : ''}"><span class="ib">${ico(TYPE_ICO[e.type])}</span><div><span class="when">${whenLabel(e.t, now)} · ${rel(e.t, now)}</span><b>${esc(e.title)}</b><p>${esc(e.text)}${e.link ? ` <a href="${e.link}">Xem</a>` : ''}</p></div></li>`).join('')}</ol>` : '<p class="small muted">Không còn mục nào trong lịch.</p>';
   const actions = demo
     ? '<div class="actions"><button class="btn primary sm" data-act="mine">Nhập giờ của bạn</button></div>'
     : `<div class="actions"><button class="btn ghost sm" data-act="edit">${ico('edit')}Sửa giờ</button><button class="btn ghost sm" data-act="ics">${ico('calendar')}Lưu vào lịch điện thoại</button><button class="btn ghost sm" data-act="link">${ico('link')}Sao chép link riêng</button><button class="btn ghost sm" data-act="del">${ico('trash')}Xoá</button></div>`;
-  body.innerHTML = (demo ? '<div class="demo-bar"><span>Đang xem thử với giờ mẫu: bắt đầu nhịn khoảng 20 giờ trước. Chưa lưu gì.</span><button class="btn primary sm" data-act="mine">Nhập giờ của bạn</button></div>' : '') +
+  box.innerHTML = (demo ? '<div class="demo-bar"><span>Đang xem thử với giờ mẫu: bắt đầu nhịn khoảng 20 giờ trước. Chưa lưu gì.</span><button class="btn primary sm" data-act="mine">Nhập giờ của bạn</button></div>' : '') +
     `<div class="now-grid"><div class="now"><div class="big">${big}</div><p class="big-sub">${sub}</p>${journeyHTML(md, ps, now)}${phaseHTML(md, ps, now)}</div>` +
-    `<div class="side"><h3>Tiếp theo</h3>${upHTML}${actions}<p class="small muted">Bắt đầu nhịn ${dayName(md.S)} ${hm(md.S)} · ăn lại ${dayName(md.E)} ${hm(md.E)} · ${Math.round(md.H)} giờ.</p></div></div>` +
-    scheduleHTML(md, now, keep);
-  fillCites(body);
+    `<div class="side"><h3>Tiếp theo</h3>${upHTML}${actions}<p class="small muted">Bắt đầu nhịn ${dayName(md.S)} ${hm(md.S)} · phá nhịn ${dayName(md.E)} ${hm(md.E)} · ${Math.round(md.H)} giờ.</p></div></div>`;
+  sched.innerHTML = scheduleHTML(md, now, keep);
+  if (ps.k !== trackKind || dateVal(now) !== trackDay) renderTrack(); /* qua ngày mới thì đếm nước lại từ 0 */
 }
 
 const DURS = [
   { n: '24 giờ', f: S => addMin(S, 1440) },
-  { n: '1 ngày trọn', f: (S, M) => at(addDays(sod(S), 2), M[0]) },
-  { n: '2 ngày', f: (S, M) => at(addDays(sod(S), 3), M[0]) },
-  { n: '3 ngày', f: (S, M) => at(addDays(sod(S), 4), M[0]) },
-  { n: '5 ngày', f: (S, M) => at(addDays(sod(S), 6), M[0]) },
-  { n: '7 ngày', f: (S, M) => at(addDays(sod(S), 8), M[0]) }
+  { n: '1 ngày trọn', f: (S, M) => at(addDays(sod(S), 2), M[0]) }
 ];
-function renderSetup(body) {
+function renderSetup(box) {
   const now = new Date();
   const M = plan ? plan.m.slice() : DEF_M.slice();
+  const eat = plan && plan.e ? plan.e.slice() : DEF_EAT.slice();
   const S0 = plan ? parseDT(plan.b) : (now.getHours() < 18 ? at(now, '19:00') : at(addDays(sod(now), 1), '19:00'));
   const E0 = plan ? parseDT(plan.k) : DURS[1].f(S0, M);
-  body.innerHTML = `<form class="setup" id="setup" novalidate>
-    ${plan ? '' : '<p class="intro">Nhập giờ bạn ăn xong bữa cuối (thường là bữa tối của ngày giảm ăn) và giờ định ăn lại. Trang sẽ tính bạn đang ở giờ thứ mấy, cơ thể đang làm gì, bữa và việc tiếp theo. Đã bắt đầu rồi thì chọn giờ trong quá khứ.</p>'}
+  box.innerHTML = `<form class="setup" id="setup" novalidate>
+    ${plan ? '' : '<p class="intro">Nhập giờ bạn ăn xong bữa cuối (thường là bữa tối của Ngày 1) và giờ định phá nhịn. Trang sẽ tính bạn đang ở giờ thứ mấy, cơ thể đang ở chặng nào, bữa và việc tiếp theo. Đã bắt đầu rồi thì chọn giờ trong quá khứ.</p>'}
     <div class="fgrid">
       <div class="field"><span>Bắt đầu nhịn (ăn xong bữa cuối)</span><div class="two"><input type="date" id="b-d" aria-label="Ngày bắt đầu nhịn"><input type="time" id="b-t" aria-label="Giờ bắt đầu nhịn"></div></div>
-      <div class="field"><span>Bữa ăn lại đầu tiên (phá nhịn)</span><div class="two"><input type="date" id="k-d" aria-label="Ngày ăn lại"><input type="time" id="k-t" aria-label="Giờ ăn lại"></div></div>
+      <div class="field"><span>Phá nhịn (bữa ăn lại đầu tiên)</span><div class="two"><input type="date" id="k-d" aria-label="Ngày phá nhịn"><input type="time" id="k-t" aria-label="Giờ phá nhịn"></div></div>
     </div>
     <div class="field"><span>Hoặc chọn nhanh thời gian nhịn</span><div class="durs" id="durs" role="group" aria-label="Thời gian nhịn"></div></div>
-    <details class="more"><summary>Giờ ăn quen thuộc của bạn</summary><div class="in"><p class="small muted">Dùng cho ngày giảm ăn, nhắc nhở trong ngày nhịn và ngày ăn lại.</p>
-      <div class="three"><label>Sáng<input type="time" id="m0"></label><label>Trưa<input type="time" id="m1"></label><label>Tối<input type="time" id="m2"></label></div></div></details>
+    <details class="more"><summary>Bữa ăn quen thuộc của bạn</summary><div class="in"><p class="small muted">Ngày 1 chỉ ăn các bữa chính như bạn quen (3, 2 hay 1 bữa): bỏ chọn bữa bạn không ăn. Giờ này cũng dùng để nhắc trong ngày nhịn.</p>
+      <div class="three">
+        <div class="mt"><label for="m0">Sáng</label><input type="time" id="m0"><label class="eat"><input type="checkbox" id="e0">có ăn</label></div>
+        <div class="mt"><label for="m1">Trưa</label><input type="time" id="m1"><label class="eat"><input type="checkbox" id="e1">có ăn</label></div>
+        <div class="mt"><label for="m2">Tối</label><input type="time" id="m2"><span class="eat">bữa cuối</span></div>
+      </div></div></details>
     <p class="msg" id="setup-msg" aria-live="polite"></p>
     <div class="btnrow"><button class="btn primary" type="submit">${ico('calendar')}Lưu và xem lịch</button>${plan ? '<button class="btn ghost" type="button" id="cancel">Huỷ</button>' : '<button class="btn ghost" type="button" id="try">Xem thử</button>'}</div>
     <p class="small muted">Lịch chỉ lưu trên trình duyệt của bạn, không gửi đi đâu.</p>
   </form>`;
-  const f = $('#setup', body);
+  const f = $('#setup', box);
   const set = (id, v) => { $('#' + id, f).value = v; };
   set('b-d', dateVal(S0)); set('b-t', hm(S0)); set('k-d', dateVal(E0)); set('k-t', hm(E0));
   M.forEach((m, i) => set('m' + i, m));
+  eat.forEach((v, i) => { $('#e' + i, f).checked = !!v; });
   const read = () => {
     const S = parseDT($('#b-d', f).value + 'T' + $('#b-t', f).value);
     const E = parseDT($('#k-d', f).value + 'T' + $('#k-t', f).value);
     const Ms = [0, 1, 2].map(i => fixHM($('#m' + i, f).value) || DEF_M[i]);
-    return { S, E, M: Ms };
+    return { S, E, M: Ms, e: [0, 1].map(i => $('#e' + i, f).checked ? 1 : 0) };
   };
   const check = () => {
     const r = read(), msg = $('#setup-msg', f);
     msg.className = 'msg';
     if (!r.S || !r.E) { msg.textContent = ''; return null; }
     const H = (r.E - r.S) / 36e5;
-    if (H < 12) { msg.className = 'msg bad'; msg.textContent = 'Bữa ăn lại phải sau giờ bắt đầu nhịn ít nhất 12 giờ.'; return null; }
-    if (H > 240) { msg.className = 'msg bad'; msg.textContent = 'Lịch hỗ trợ tối đa 10 ngày nhịn.'; return null; }
-    msg.textContent = H > 72 ? `Nhịn ${Math.round(H)} giờ: cần người hướng dẫn theo sát mỗi ngày, và đã qua bài kiểm tra an toàn.` : `Nhịn ${Math.round(H)} giờ, ăn lại ${refeedDays(H)} ngày.`;
+    if (H < 12) { msg.className = 'msg bad'; msg.textContent = 'Giờ phá nhịn phải sau giờ bắt đầu nhịn ít nhất 12 giờ.'; return null; }
+    if (H > MAX_H) { msg.className = 'msg bad'; msg.textContent = 'Lịch hỗ trợ tối đa 3 ngày nhịn.'; return null; }
+    msg.textContent = H > 40 ? `Nhịn ${Math.round(H)} giờ: dài hơn chương trình nhịn 1 ngày, chỉ làm khi người hướng dẫn đồng ý và theo sát.` : `Nhịn ${Math.round(H)} giờ.`;
     return r;
   };
   const paintDurs = () => {
@@ -471,7 +423,7 @@ function renderSetup(body) {
     e.preventDefault();
     const r = check();
     if (!r) { if (!$('#setup-msg', f).textContent) { $('#setup-msg', f).className = 'msg bad'; $('#setup-msg', f).textContent = 'Chọn đủ ngày và giờ.'; } return; }
-    plan = { b: fmtDT(r.S), k: fmtDT(r.E), m: r.M, c: Date.now() };
+    plan = { b: fmtDT(r.S), k: fmtDT(r.E), m: r.M, e: r.e, c: Date.now() };
     demo = false; editing = false;
     if (!store.set('na-plan', plan)) toast('Trình duyệt không cho lưu. Dùng “Sao chép link riêng” để mở lại lịch.');
     if (location.search) history.replaceState(null, '', location.pathname + '#lich');
@@ -479,11 +431,11 @@ function renderSetup(body) {
     $('#lich').scrollIntoView({ block: 'start' });
   });
   const cancel = $('#cancel', f);
-  if (cancel) cancel.onclick = () => { editing = false; renderTracker(); };
+  if (cancel) cancel.onclick = () => { editing = false; onPlanChange(); };
   const tryB = $('#try', f);
   if (tryB) tryB.onclick = () => {
     const S = new Date(Math.round((Date.now() - 20 * 36e5) / 9e5) * 9e5);
-    plan = { b: fmtDT(S), k: fmtDT(addMin(S, 36 * 60)), m: DEF_M.slice(), c: Date.now() - 30 * 864e5 };
+    plan = { b: fmtDT(S), k: fmtDT(addMin(S, 36 * 60)), m: DEF_M.slice(), e: DEF_EAT.slice(), c: Date.now() - 30 * 864e5 };
     demo = true; editing = false;
     onPlanChange();
   };
@@ -491,7 +443,7 @@ function renderSetup(body) {
 
 function planLink(p) {
   const base = location.href.split('#')[0].split('?')[0];
-  return `${base}?b=${p.b}&k=${p.k}&m=${p.m.map(x => x.replace(':', '')).join('-')}#lich`;
+  return `${base}?b=${p.b}&k=${p.k}&m=${p.m.map(x => x.replace(':', '')).join('-')}&e=${(p.e || DEF_EAT).join('')}#lich`;
 }
 function copyText(text) {
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
@@ -531,13 +483,13 @@ function buildICS(md) {
   return L.map(fold).join('\r\n') + '\r\n';
 }
 
-$('#trk-body').addEventListener('click', e => {
+$('#trk-now').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const act = b.dataset.act;
-  if (act === 'edit') { editing = true; renderTracker(); }
-  else if (act === 'mine') { plan = demo ? null : plan; demo = false; editing = !!plan; renderTracker(); onPlanChange(); }
+  if (act === 'edit') { editing = true; onPlanChange(); }
+  else if (act === 'mine') { plan = demo ? null : plan; demo = false; editing = !!plan; onPlanChange(); }
   else if (act === 'del') {
-    if (!confirm('Xoá lịch đã lưu trên máy này?')) return;
+    if (!confirm('Xoá lịch đã lưu trên máy này? Nhật ký theo dõi vẫn giữ.')) return;
     store.del('na-plan'); plan = null; editing = false;
     if (location.search) history.replaceState(null, '', location.pathname + '#lich');
     onPlanChange();
@@ -553,6 +505,88 @@ $('#trk-body').addEventListener('click', e => {
   }
 });
 
+/* =====================================================================
+   THEO DÕI: nước uống trong ngày và nhật ký cảm nhận (chỉ lưu trên máy)
+   ===================================================================== */
+const TB = {};
+D.TOOLBOX.forEach(t => { TB[t.id] = t; });
+const FEELN = {};
+D.FEEL.forEach(f => { FEELN[f.id] = f.n; });
+const liters = n => (n * D.CUP_ML / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+
+function helpHTML(ids) {
+  const hard = ids.filter(id => TB[id]);
+  if (!hard.length) return ids.length ? '<div class="help"><span>Tốt. Tiếp tục uống nước và lắng nghe cơ thể.</span></div>' : '';
+  return `<div class="help">${hard.map(id => `<div><b>${esc(TB[id].n)}</b><ul>${TB[id].tips.map(t => `<li>${ico('check')}<span>${esc(t)}</span></li>`).join('')}</ul></div>`).join('')}
+    <span class="who">Có biểu hiện lạ trên cơ thể: báo người hướng dẫn.</span></div>`;
+}
+function renderTrack() {
+  const box = $('#trk-log');
+  const ps = plan && !editing && !demo ? phaseAt(model(plan), new Date()) : null;
+  trackKind = ps ? ps.k : null;
+  trackDay = dateVal(new Date());
+  if (!ps || ps.k === 'far' || ps.k === 'prep') { box.hidden = true; box.innerHTML = ''; return; }
+  const md = model(plan), now = new Date();
+  const w = store.get('na-water', {})[dateVal(now)] || 0;
+  const d1 = ps.k === 'd1';
+  const log = store.get('na-log', []).slice().sort((a, b) => b.t - a.t);
+  const item = x => {
+    const t = new Date(x.t), h = t >= md.S && t < md.E ? ' · giờ thứ ' + (Math.floor((t - md.S) / 36e5) + 1) : '';
+    const what = x.f.map(id => FEELN[id] || id).join(', ') + (x.n ? (x.f.length ? ' · ' : '') + x.n : '');
+    return `<li><span class="when">${whenLabel(t, now)}${h}</span><button class="x" data-del="${x.t}" aria-label="Xoá lần ghi này">${ico('x')}</button><span class="what">${esc(what)}</span></li>`;
+  };
+  box.hidden = false;
+  box.innerHTML = `<div class="tcard"><div class="tool-head"><h3>Nước hôm nay</h3><span class="small muted">1 cốc = ${D.CUP_ML} ml</span></div>
+      <div class="water"><span class="num">${liters(w)} lít</span><span class="small muted">${w} cốc${d1 ? ' · Ngày 1 cần 1,5–2 lít (6–8 cốc)' : ''}</span></div>
+      ${d1 ? `<div class="cups" aria-hidden="true">${Array.from({ length: Math.max(8, w) }, (_, i) => `<i${i < w ? ' class="f"' : ''}></i>`).join('')}</div>`
+        : '<p class="small muted">Uống nước trắng đều, đủ nước cho cơ thể.</p>'}
+      <div class="btnrow"><button class="btn primary sm" data-w="1">+ 1 cốc</button><button class="btn ghost sm" data-w="-1"${w ? '' : ' disabled'}>− 1 cốc</button></div></div>
+    <div class="tcard"><h3>Bạn thấy thế nào?</h3>
+      <div class="chips" id="feel" role="group" aria-label="Cảm nhận lúc này">${D.FEEL.map(f => `<button type="button" class="chip" data-f="${f.id}" aria-pressed="false">${esc(f.n)}</button>`).join('')}</div>
+      <input type="text" id="feel-note" maxlength="200" placeholder="Ghi chú thêm (không bắt buộc)" aria-label="Ghi chú">
+      <div class="btnrow"><button class="btn primary sm" data-act="log">Ghi lại</button><span class="small muted">Nhật ký chỉ lưu trên máy của bạn.</span></div>
+      <div id="feel-help" aria-live="polite"></div>
+      ${log.length ? `<details class="more"${log.length <= 3 ? ' open' : ''}><summary>Nhật ký · ${log.length} lần ghi</summary><div class="in"><ol class="logl">${log.map(item).join('')}</ol></div></details>` : ''}
+    </div>`;
+}
+$('#trk-log').addEventListener('click', e => {
+  const wb = e.target.closest('[data-w]');
+  if (wb) {
+    const all = store.get('na-water', {}), k = dateVal(new Date());
+    all[k] = Math.max(0, (all[k] || 0) + (+wb.dataset.w));
+    store.set('na-water', all);
+    renderTrack();
+    return;
+  }
+  const chip = e.target.closest('[data-f]');
+  if (chip) {
+    const on = chip.getAttribute('aria-pressed') !== 'true';
+    if (chip.dataset.f === 'on' && on) $$('#feel [data-f]').forEach(c => c.setAttribute('aria-pressed', 'false'));
+    else if (on) { const ok = $('#feel [data-f="on"]'); if (ok) ok.setAttribute('aria-pressed', 'false'); }
+    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    return;
+  }
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    store.set('na-log', store.get('na-log', []).filter(x => String(x.t) !== del.dataset.del));
+    renderTrack();
+    return;
+  }
+  if (e.target.closest('[data-act="log"]')) {
+    const f = $$('#feel [aria-pressed="true"]').map(c => c.dataset.f);
+    const n = $('#feel-note').value.trim();
+    if (!f.length && !n) { toast('Chọn ít nhất một cảm nhận, hoặc viết ghi chú.'); return; }
+    const log = store.get('na-log', []);
+    log.push({ t: Date.now(), f, n });
+    if (!store.set('na-log', log)) toast('Trình duyệt không cho lưu nhật ký.');
+    renderTrack();
+    $('#feel-help').innerHTML = helpHTML(f);
+  }
+});
+$('#trk-log').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'feel-note') { e.preventDefault(); $('[data-act="log"]', $('#trk-log')).click(); }
+});
+
 /* ---------- các phần phụ thuộc lịch ---------- */
 function curFastHour() {
   if (!plan) return null;
@@ -563,18 +597,9 @@ function renderPhases() {
   const h = curFastHour();
   $('#phases').innerHTML = D.PHASES.map(p => {
     const cur = h != null && h >= p.from && h < p.to;
-    return `<div class="pcard${cur ? ' cur' : ''}" style="--pc:var(--${p.fuel})"><span class="hh">giờ ${p.from}${p.to === Infinity ? ' trở đi' : '–' + p.to}${cur ? ' <span class="tag">bạn đang ở đây</span>' : ''}</span>
-      <h4>${p.name}</h4><p>${p.body}${cite(p.s)}</p><p class="small"><b>Có thể thấy:</b> ${p.feel.join(', ').toLowerCase()}.</p><ul>${p.todo.map(t => `<li>${t}</li>`).join('')}</ul></div>`;
+    return `<div class="pcard${cur ? ' cur' : ''}" style="--pc:var(--${p.c})"><span class="hh">giờ ${p.from}${p.to === Infinity ? ' trở đi' : '–' + p.to}${cur ? ' <span class="tag">bạn đang ở đây</span>' : ''}</span>
+      <h4>${esc(p.name)}</h4><p>${esc(p.body)}</p><p class="small"><b>Theo tài liệu:</b> ${esc(lc(p.feel))}</p></div>`;
   }).join('');
-  fillCites($('#phases'));
-}
-function renderRoutine() {
-  const M = plan ? plan.m : DEF_M;
-  const rows = D.ROUTINE.map(r => {
-    const base = r.at in MK ? at(new Date(2000, 0, 1), M[MK[r.at]]) : at(new Date(2000, 0, 1), r.at);
-    return { t: addMin(base, r.off || 0), r };
-  }).sort((a, b) => a.t - b.t);
-  $('#routine').innerHTML = rows.map(x => `<li><span class="min">${hm(x.t)}</span><div><b>${x.r.t}</b><p>${x.r.d}</p></div></li>`).join('');
 }
 
 /* =====================================================================
@@ -582,8 +607,8 @@ function renderRoutine() {
    ===================================================================== */
 function renderPrep() {
   const st = store.get('na-prep', {});
-  $('#prep-list').innerHTML = D.PREP.map(g => `<div class="grp">${g.g}</div>` + g.items.map(it =>
-    `<label><input type="checkbox" data-id="${it.id}"${st[it.id] ? ' checked' : ''}><span>${esc(it.t)}${it.must ? ' <span class="tag must">Bắt buộc</span>' : ''}${it.s === 'ct_chuanbi' ? '' : cite(it.s)}</span></label>`).join('')).join('');
+  $('#prep-list').innerHTML = D.PREP.map(g => `<div class="grp"${g.id ? ` id="${g.id}"` : ''}>${g.g}</div>` + g.items.map(it =>
+    `<label><input type="checkbox" data-id="${it.id}"${st[it.id] ? ' checked' : ''}><span>${esc(it.t)}${it.must ? ' <span class="tag must">Bắt buộc</span>' : ''}</span></label>`).join('')).join('');
   paintPrep();
 }
 function paintPrep() {
@@ -605,40 +630,16 @@ whyEl.addEventListener('input', () => {
   clearTimeout(whyT);
   whyT = setTimeout(() => { store.set('na-why', whyEl.value.trim()); renderTracker(true); renderToolbox(curTool); }, 400);
 });
-
-$('#broth-ing').innerHTML = D.BROTH.ing.map(i => `<span class="chip static">${i}</span>`).join('');
-$('#broth-steps').innerHTML = D.BROTH.steps.map(s => `<li>${s}</li>`).join('');
-$('#broth-use').innerHTML = D.BROTH.use + cite('ct_chuanbi,ct_ngay1');
-
-function renderScreen() {
-  $('#screen-list').innerHTML = D.SAFETY.map(g => `<div class="grp">${g.g}</div>` + g.items.map(it =>
-    `<label><input type="checkbox" data-id="${it.id}"><span>${esc(it.t)}${cite(it.s)}</span></label>`).join('')).join('');
-  paintScreen();
-}
-function paintScreen() {
-  const on = $$('#screen-list input:checked').map(c => c.dataset.id);
-  const all = [].concat(...D.SAFETY.map(g => g.items));
-  const hit = all.filter(i => on.indexOf(i.id) > -1);
-  const stop = hit.filter(i => i.lv === 'stop'), adj = hit.filter(i => i.lv === 'adj');
-  const box = $('#screen-result');
-  if (stop.length) {
-    box.className = 'result stop';
-    box.innerHTML = `<span class="st">${ico('x')}Không nên tự nhịn</span><ul>${stop.map(i => `<li>${esc(i.t)}</li>`).join('')}</ul><p class="small">Hãy nói chuyện với bác sĩ trước. Nếu vẫn muốn tham gia, chỉ làm khi bác sĩ đồng ý và theo dõi; có thể chỉ tập không ăn vặt, ăn chậm, nhai kỹ.</p>`;
-  } else if (adj.length) {
-    box.className = 'result adj';
-    box.innerHTML = `<span class="st">${ico('alert')}Cần bác sĩ hoặc người hướng dẫn theo sát</span><ul>${adj.map(i => `<li>${esc(i.t)}</li>`).join('')}</ul><p class="small">Hỏi bác sĩ về thuốc đang dùng, giữ liên lạc với người hướng dẫn mỗi ngày, và chuẩn bị sẵn Hộp hỗ trợ.</p>`;
-  } else {
-    box.className = 'result ok';
-    box.innerHTML = `<span class="st">${ico('check')}Chưa thấy điều gì cần dừng</span><p class="small">Vẫn nhịn cùng người hướng dẫn, lắng nghe cơ thể, và biết các dấu hiệu phải dừng ở Phần 3.</p>`;
-  }
-}
-$('#screen-list').addEventListener('change', paintScreen);
+$('#broth-ing').innerHTML = D.BROTH.ing.map(i => `<span class="chip static">${esc(i)}</span>`).join('');
+$('#broth-how').textContent = D.BROTH.how;
+$('#broth-use').innerHTML = D.BROTH.use.map(u => `<li>${esc(u)}</li>`).join('');
+$('#not-for').innerHTML = D.NOT_FOR.map(x => `<li>${esc(x)}</li>`).join('');
 
 /* =====================================================================
-   PHẦN 2: ngày giảm ăn
+   PHẦN 2: Ngày 1
    ===================================================================== */
-$('#d1-goal').innerHTML = esc(D.DAY1.goal) + cite('ct_ngay1');
-$('#d1-rules').innerHTML = D.DAY1.rules.map(r => `<div><span class="ib">${ico(r.ico)}</span><div><h4>${r.t}</h4><p>${r.d}</p></div></div>`).join('');
+$('#d1-goal').textContent = D.DAY1.goal;
+$('#d1-rules').innerHTML = D.DAY1.rules.map(r => `<div><span class="ib">${ico(r.ico)}</span><div><h4>${esc(r.t)}</h4><p>${esc(r.d)}</p></div></div>`).join('');
 
 function tabs(root, attr, onSel) {
   const btns = $$('button', root);
@@ -664,26 +665,25 @@ const MEAL_ITEMS = {
 };
 tabs($('#meal-tabs'), 'meal', k => {
   const m = D.MENUS[k];
-  $('#meal-panel').innerHTML = `<figure>${img(m.img, m.alt, 'bowl')}</figure><div class="mbody"><p class="lead-t">${esc(m.lead)}${cite(m.s)}</p>
-    ${m.except ? `<span class="except">${ico('x')}${m.except}</span>` : ''}
+  $('#meal-panel').innerHTML = `<figure>${img(m.img, m.alt, 'bowl')}</figure><div class="mbody"><p class="lead-t">${esc(m.lead)}</p>
+    ${m.except ? `<span class="except">${ico('x')}${esc(m.except)}</span>` : ''}
     <div class="gl">${m.groups.map(g => {
       const G = D.GROUPS[g];
-      return `<div><span class="ib">${ico(G.ico)}</span><div><b>${G.n}</b><span>${(MEAL_ITEMS[k] && MEAL_ITEMS[k][g]) || G.items}</span></div></div>`;
+      return `<div><span class="ib">${ico(G.ico)}</span><div><b>${esc(G.n)}</b><span>${esc((MEAL_ITEMS[k] && MEAL_ITEMS[k][g]) || G.items)}</span></div></div>`;
     }).join('')}</div>
     <ul class="notes">${m.notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul></div>`;
-  fillCites($('#meal-panel'));
 });
 
 const groupCard = (g, stop) => {
   const G = D.GROUPS[g];
-  return `<div class="gcard${stop ? ' stop' : ''}">${img(G.img, 'Minh hoạ ' + lc(G.n), G.ico)}<div class="body"><h3>${G.n}</h3><p>${G.items}</p></div></div>`;
+  return `<div class="gcard${stop ? ' stop' : ''}">${img(G.img, 'Minh hoạ ' + lc(G.n), G.ico)}<div class="body"><h3>${esc(G.n)}</h3><p>${esc(G.items)}</p></div></div>`;
 };
 $('#allowed').innerHTML = D.ALLOWED.map(g => groupCard(g, false)).join('');
 $('#stopped').innerHTML = D.STOPPED.map(g => groupCard(g, true)).join('');
 
 /* tra cứu món */
 const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
-const FOODS = D.FOODS.map(f => ({ n: f[0], keys: [norm(f[0])].concat(f[1].split(',').map(norm)).filter(Boolean), g: f[2], r: f[3], note: f[4], src: f[5], lad: f[6] || D.GROUPS[f[2]].lad }));
+const FOODS = D.FOODS.map(f => ({ n: f[0], keys: [norm(f[0])].concat(f[1].split(',').map(norm)).filter(Boolean), g: f[2], r: f[3], note: f[4], src: f[5] }));
 function search(q) {
   q = norm(q);
   if (q.length < 2) return [];
@@ -705,34 +705,28 @@ function search(q) {
   return res.filter(x => best >= 100 ? x.s >= 100 : x.s >= best * 0.6).slice(0, 6).map(x => x.f);
 }
 const SLOT = { Y: ['check', 'được'], N: ['x', 'không'], '?': ['q', 'chưa rõ'] };
-const SRC_LB = { c: 'Theo tài liệu', s: 'Suy ra từ nhóm', q: 'Tài liệu không nói' };
-function refeedWhen(st) {
-  if (st >= 6) return 'Ăn lại: sau cùng, càng muộn càng tốt';
-  if (!plan) return 'Ăn lại: bậc ' + st;
-  const md = model(plan);
-  const i = md.R === 1 ? (st <= 2 ? 1 : 0) : (st <= md.R ? st : 0);
-  return i ? `Ăn lại: bậc ${st} · ngày ăn lại thứ ${i} (${dayName(addDays(md.rStart, i - 1))})` : `Ăn lại: bậc ${st} · sau những ngày ăn lại`;
-}
+const SRC_LB = { c: ['ct', 'Theo tài liệu'], s: ['', 'Suy ra từ nhóm trong tài liệu'], q: ['q', 'Tài liệu không nói'] };
 function renderFinder() {
   const q = $('#fq').value, out = $('#fres');
   if (norm(q).length < 2) { out.innerHTML = '<p class="small muted">Gõ ít nhất 2 chữ, có dấu hay không dấu đều được.</p>'; return; }
   const res = search(q);
   if (!res.length) {
-    out.innerHTML = `<div class="fitem"><b>Chưa có “${esc(q)}” trong danh sách</b><p>Nguyên tắc ngày giảm ăn: rau củ, trái cây ít ngọt, ngũ cốc nguyên hạt, khoai, hạt khô, dầu ép lạnh. Không sữa, thịt cá trứng, đậu, nấm, đường, đồ chiên, cà phê, trà, rượu bia. Không chắc thì hỏi người hướng dẫn.</p></div>`;
+    out.innerHTML = `<div class="fitem"><b>Chưa có “${esc(q)}” trong danh sách</b><p>Nguyên tắc Ngày 1: rau củ, trái cây ít ngọt, ngũ cốc nguyên hạt, khoai, hạt khô, dầu ép lạnh. Không sữa, thịt cá trứng, đậu, nấm, đường, đồ chiên, cà phê, trà, rượu bia. Không chắc thì hỏi người hướng dẫn.</p></div>`;
     return;
   }
   out.innerHTML = res.map(f => {
-    const G = D.GROUPS[f.g], no = f.r === 'NNN';
+    const G = D.GROUPS[f.g], no = f.r === 'NNN', lb = SRC_LB[f.src];
     const slots = ['Sáng', 'Trưa', 'Tối'].map((n, i) => {
       const c = f.r[i], s = SLOT[c];
       return `<span class="slot ${c === '?' ? 'Q' : c}">${ico(s[0])}${n}: ${s[1]}</span>`;
     }).join('');
-    return `<div class="fitem${no ? ' no' : ''}"><div class="fitem-h"><b>${esc(f.n)}</b><span class="g">${G.n}${G.ok ? '' : ' · ngừng từ Ngày 1'}</span></div>
+    return `<div class="fitem${no ? ' no' : ''}"><div class="fitem-h"><b>${esc(f.n)}</b><span class="g">${esc(G.n)}${G.ok ? '' : ' · ngừng từ Ngày 1'}</span></div>
       <div class="slots">${slots}</div>${f.note ? `<p>${esc(f.note)}</p>` : ''}
-      <div class="meta"><span class="tag${f.src === 'c' ? ' ct' : ''}">${SRC_LB[f.src]}</span><span>${refeedWhen(f.lad)}</span></div></div>`;
+      <span class="tag${lb[0] ? ' ' + lb[0] : ''}">${lb[1]}</span></div>`;
   }).join('');
 }
-$('#fq-pop').innerHTML = D.POPULAR.map(p => `<button type="button" class="chip">${p}</button>`).join('');
+$('#finder-n').textContent = 'Ngày 1 · ' + D.FOODS.length + ' món';
+$('#fq-pop').innerHTML = D.POPULAR.map(p => `<button type="button" class="chip">${esc(p)}</button>`).join('');
 $('#fq-pop').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   $('#fq').value = b.textContent; renderFinder();
@@ -740,218 +734,13 @@ $('#fq-pop').addEventListener('click', e => {
 let fqT;
 $('#fq').addEventListener('input', () => { clearTimeout(fqT); fqT = setTimeout(renderFinder, 90); });
 
-/* =====================================================================
-   PHẦN 3: khi nhịn
-   ===================================================================== */
-$('#src3').innerHTML = [
-  { f: 'f2', n: 1, t: 'Glycogen trong gan', w: 'khoảng 12–24 giờ đầu', d: 'Đường dự trữ trong gan (và một phần trong cơ), dễ lấy nhất. Vì thế ngày đầu nhịn bạn vẫn thấy khá ổn. Vận động càng mạnh thì càng nhanh cạn.', s: 'ct_lythuyet' },
-  { f: 'f3', n: 2, t: 'Mỡ dự trữ', w: 'tăng dần khi glycogen vơi', d: 'Mỡ tách thành glycerol (gan biến thành đường mới) và axit béo (gan, thận, tim, cơ dùng trực tiếp). Axit amin từ tế bào cũ hỏng cũng được tái chế: đó là tự thực.', s: 'ct_lythuyet,cahill2006' },
-  { f: 'f4', n: 3, t: 'Thể ketone', w: 'từ ngày thứ 2–3', d: 'Gan làm ketone từ axit béo; cơ thể vào trạng thái ketosis. Bước chuyển như một cánh cửa, đôi khi khó qua: “khủng hoảng axit” với nhiều cảm giác khó chịu.', s: 'ct_lythuyet,cahill2006' }
-].map(x => `<div style="--fc:var(--${x.f})"><span class="n">${x.n}</span><div><span class="when">Nguồn ${x.n} · ${x.w}</span><h4>${x.t}</h4><p>${x.d}${cite(x.s)}</p></div></div>`).join('');
-
-let curTool = D.TOOLBOX[0].id;
-function renderToolbox(id) {
-  curTool = id;
-  $$('#tb-chips .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id ? 'true' : 'false'));
-  const t = D.TOOLBOX.find(x => x.id === id);
-  const w = id === 'tam-ly' ? store.get('na-why', '') : '';
-  $('#tb-card').innerHTML = `<div class="tbcard"><b>${t.n}</b><ul>${t.tips.map(x => `<li>${ico(x.c ? 'check' : 'arrow')}<span>${esc(x.t)}${x.c ? ' <span class="tag ct">Chương trình</span>' : ''}</span></li>`).join('')}</ul>
-    ${w ? `<div class="why-box"><b>Lý do của bạn</b>${esc(w)}</div>` : ''}
-    ${t.flag ? `<p class="flag">${ico('alert')}<span>${esc(t.flag)}</span></p>` : ''}</div>`;
-}
-$('#tb-chips').innerHTML = D.TOOLBOX.map(t => `<button type="button" class="chip" data-id="${t.id}" aria-pressed="false">${t.n}</button>`).join('');
-$('#tb-chips').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) renderToolbox(b.dataset.id); });
-$('#redflags').innerHTML = D.REDFLAGS.map(r => `<li>${ico('alert')}<span>${r}</span></li>`).join('');
-
-/* ---------- biểu đồ chung ---------- */
-/* below = đặt dưới điểm neo (dùng cho biểu đồ có đường cong chạm mép trên) */
-function tipShow(box, html, x, y, below) {
-  let t = $('.tip', box);
-  if (!t) { t = document.createElement('div'); t.className = 'tip'; t.setAttribute('role', 'tooltip'); box.appendChild(t); }
-  t.innerHTML = html; t.hidden = false;
-  t.style.transform = below ? 'translate(-50%, 0)' : '';
-  const w = box.clientWidth, half = Math.min(t.offsetWidth / 2 || 120, w / 2 - 4);
-  t.style.left = Math.max(half, Math.min(w - half, x)) + 'px';
-  t.style.top = y + 'px';
-}
-const tipHide = box => { const t = $('.tip', box); if (t) t.hidden = true; };
-
-/* ba nguồn năng lượng theo giờ: mỗi hàng một dải, đậm ở đoạn rõ nhất, nhạt dần hai đầu */
-function drawFuel() {
-  const box = $('#fuel-viz');
-  box.style.position = 'relative';
-  const W = Math.max(300, Math.round(box.clientWidth || 640));
-  const xMax = 120, pl = 6, pr = 14, top = 34, rowH = 50, axisH = 44;
-  const Hh = top + rowH * D.FUELS.length + axisH;
-  const x = h => pl + (W - pl - pr) * Math.min(h, xMax) / xMax;
-  const h0 = curFastHour();
-  let s = '<defs>';
-  D.FUELS.forEach(f => {
-    const x0 = x(f.a), x1 = x(Math.min(f.d, xMax));
-    const off = h => Math.max(0, Math.min(100, (x(Math.min(h, xMax)) - x0) / Math.max(1, x1 - x0) * 100)).toFixed(2) + '%';
-    s += `<linearGradient id="g-${f.id}" gradientUnits="userSpaceOnUse" x1="${x0}" x2="${x1}" y1="0" y2="0">
-      <stop offset="0%" style="stop-color:var(--${f.id});stop-opacity:${f.a === f.b ? 1 : 0.1}"/>
-      <stop offset="${off(f.b)}" style="stop-color:var(--${f.id});stop-opacity:1"/>
-      <stop offset="${off(f.c)}" style="stop-color:var(--${f.id});stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:var(--${f.id});stop-opacity:${f.d >= 999 ? 1 : 0.1}"/></linearGradient>`;
-  });
-  s += '</defs>';
-  const yA = top + rowH * D.FUELS.length + 6;
-  [0, 12, 24, 36, 48, 72, 96, 120].forEach(h => {
-    s += `<line class="gridl" x1="${x(h)}" x2="${x(h)}" y1="${top - 6}" y2="${yA}"/>`;
-    s += `<text class="ax" x="${x(h)}" y="${yA + 14}" text-anchor="${h === 0 ? 'start' : h === 120 ? 'end' : 'middle'}">${h === 120 ? '120 giờ' : h}</text>`;
-  });
-  for (let d = 0; d < 5; d++) s += `<text class="ax" x="${x(d * 24 + 12)}" y="${yA + 32}" text-anchor="middle" style="fill:var(--ink-2)">ngày ${d + 1}</text>`;
-  D.FUELS.forEach((f, i) => {
-    const y0 = top + i * rowH;
-    s += `<text class="axl" x="${pl}" y="${y0 + 12}">${f.n}</text>`;
-    s += `<rect x="${x(f.a)}" y="${y0 + 20}" width="${Math.max(4, x(Math.min(f.d, xMax)) - x(f.a))}" height="16" rx="4" fill="url(#g-${f.id})"/>`;
-    s += `<rect class="hit" data-i="${i}" x="${pl}" y="${y0}" width="${W - pl - pr}" height="${rowH}" fill="transparent" tabindex="0" role="img" aria-label="${esc(f.n + ': ' + f.note)}"/>`;
-  });
-  if (h0 != null && h0 <= xMax) {
-    const xm = x(h0), lab = 'Bạn: giờ ' + (Math.floor(h0) + 1), lw = lab.length * 6.6 + 14;
-    const lx = Math.max(pl, Math.min(W - pr - lw, xm - lw / 2));
-    s += `<line x1="${xm}" x2="${xm}" y1="${top - 8}" y2="${yA}" style="stroke:var(--ink);stroke-width:2"/>`;
-    s += `<rect x="${lx}" y="2" width="${lw}" height="20" rx="10" style="fill:var(--ink)"/><text x="${lx + lw / 2}" y="16" text-anchor="middle" style="fill:var(--bg);font:600 11.5px var(--f-body)">${lab}</text>`;
-  }
-  box.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${Hh}" width="${W}" height="${Hh}" role="img" aria-label="Biểu đồ minh hoạ bốn nguồn năng lượng theo giờ nhịn">${s}</svg>`;
-  const show = el => {
-    const f = D.FUELS[+el.dataset.i], y0 = top + (+el.dataset.i) * rowH;
-    const mid = (x(f.a) + x(Math.min(f.d, xMax))) / 2;
-    tipShow(box, `<b>${esc(f.n)}</b>${esc(f.note)}`, mid, y0 + 18);
-  };
-  $$('.hit', box).forEach(el => {
-    el.addEventListener('pointerenter', () => show(el));
-    el.addEventListener('focus', () => show(el));
-    el.addEventListener('pointerleave', () => tipHide(box));
-    el.addEventListener('blur', () => tipHide(box));
-  });
-}
-function fuelTable() {
-  const fmt = f => [
-    f.a === 0 ? 'ngay khi ăn' : 'khoảng giờ ' + f.a,
-    f.c >= 999 ? 'từ giờ ' + f.b : 'giờ ' + f.b + '–' + f.c,
-    f.d >= 999 ? 'kéo dài khi còn nhịn' : 'giờ ' + f.c + '–' + f.d
-  ];
-  $('#fuel-tbl').innerHTML = '<thead><tr><th>Nguồn</th><th>Bắt đầu</th><th>Rõ nhất</th><th>Nhạt dần</th><th>Ghi chú</th></tr></thead><tbody>' +
-    D.FUELS.map(f => { const v = fmt(f); return `<tr><td>${f.n}</td><td>${v[0]}</td><td>${v[1]}</td><td>${v[2]}</td><td>${f.note}</td></tr>`; }).join('') + '</tbody>';
-}
-
-/* insulin trong ngày: mỗi bữa là một xung lên rồi hạ */
-const insVal = (sr, t) => sr.meals.reduce((v, m) => { const u = (t - m[0]) / 0.75; return u > 0 ? v + m[1] * 0.85 * u * Math.exp(1 - u) : v; }, 0.12);
-const level = v => v < 0.22 ? 'thấp' : v < 0.5 ? 'vừa' : 'cao';
-function drawInsulin() {
-  const box = $('#ins-viz');
-  box.style.position = 'relative';
-  const W = Math.max(300, Math.round(box.clientWidth || 640)), Hh = 250;
-  const pl = 34, pr = 10, top = 10, bot = 30, t0 = 6, t1 = 24, vMax = 1.1;
-  const x = t => pl + (W - pl - pr) * (t - t0) / (t1 - t0);
-  const y = v => top + (Hh - top - bot) * (1 - v / vMax);
-  const col = ['var(--f1)', 'var(--f4)'];
-  let s = `<rect x="${pl}" y="${y(0.22)}" width="${W - pl - pr}" height="${y(0) - y(0.22)}" style="fill:var(--sage-soft);opacity:.8"/>`;
-  const step = W < 520 ? 6 : 3;
-  for (let h = 6; h <= 24; h += 3) {
-    s += `<line class="gridl" x1="${x(h)}" x2="${x(h)}" y1="${top}" y2="${y(0)}"/>`;
-    if ((h - 6) % step === 0) s += `<text class="ax" x="${x(h)}" y="${Hh - 10}" text-anchor="${h === 6 ? 'start' : h === 24 ? 'end' : 'middle'}">${h}:00</text>`;
-  }
-  s += `<line class="gridl" x1="${pl}" x2="${W - pr}" y1="${y(0)}" y2="${y(0)}"/>`;
-  s += `<text class="axl" x="${pl - 6}" y="${y(1) + 4}" text-anchor="end">cao</text><text class="axl" x="${pl - 6}" y="${y(0.1) + 4}" text-anchor="end">thấp</text>`;
-  D.INSULIN.forEach((sr, i) => {
-    let d = '';
-    for (let t = t0; t <= t1 + 1e-9; t += 0.05) d += (d ? 'L' : 'M') + x(t).toFixed(1) + ' ' + y(insVal(sr, t)).toFixed(1);
-    s += `<path d="${d}" style="fill:none;stroke:${col[i]};stroke-width:2;stroke-linejoin:round;stroke-linecap:round"/>`;
-  });
-  s += `<g id="ins-cross" visibility="hidden"><line x1="0" x2="0" y1="${top}" y2="${y(0)}" style="stroke:var(--ink-2);stroke-width:1"/>` +
-    D.INSULIN.map((sr, i) => `<circle r="5" cx="0" cy="0" data-i="${i}" style="fill:${col[i]};stroke:var(--surface);stroke-width:2"/>`).join('') + '</g>';
-  s += `<rect id="ins-hit" x="${pl}" y="${top}" width="${W - pl - pr}" height="${y(0) - top}" fill="transparent"/>`;
-  box.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${Hh}" width="${W}" height="${Hh}" tabindex="0" role="img" aria-label="Biểu đồ minh hoạ mức insulin trong ngày: ăn vặt khiến insulin không về mức thấp; chỉ ăn ba bữa chính thì insulin có lúc hạ xuống">${s}</svg>`;
-  const svg = $('svg', box), cross = $('#ins-cross', box);
-  let cur = 10;
-  const evName = (sr, t) => { const m = sr.meals.find(m => t - m[0] >= 0 && t - m[0] < 0.75); return m ? D.INSULIN_EVENTS[m[0]] : ''; };
-  const show = t => {
-    cur = Math.max(t0, Math.min(t1, Math.round(t * 4) / 4));
-    const px = x(cur);
-    cross.setAttribute('visibility', 'visible');
-    $('line', cross).setAttribute('x1', px); $('line', cross).setAttribute('x2', px);
-    $$('circle', cross).forEach(c => { const sr = D.INSULIN[+c.dataset.i]; c.setAttribute('cx', px); c.setAttribute('cy', y(insVal(sr, cur))); });
-    const hh = Math.floor(cur), mm = Math.round((cur - hh) * 60);
-    tipShow(box, `<b>${hh}:${pad(mm)}</b>` + D.INSULIN.map(sr => { const e = evName(sr, cur); return `${esc(sr.n)}: ${level(insVal(sr, cur))}${e ? ' (vừa ' + e + ')' : ''}`; }).join('<br>'), px * box.clientWidth / W, svg.getBoundingClientRect().height + 4, true);
-  };
-  const hide = () => { cross.setAttribute('visibility', 'hidden'); tipHide(box); };
-  const hit = $('#ins-hit', box);
-  hit.addEventListener('pointermove', e => { const r = svg.getBoundingClientRect(); show(t0 + ((e.clientX - r.left) * W / r.width - pl) / (W - pl - pr) * (t1 - t0)); });
-  hit.addEventListener('pointerleave', hide);
-  svg.addEventListener('focus', () => show(cur));
-  svg.addEventListener('blur', hide);
-  svg.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); show(cur + (e.key === 'ArrowRight' ? 0.5 : -0.5)); }
-  });
-}
-$('#ins-legend').innerHTML = D.INSULIN.map((sr, i) => `<span><i class="sw" style="background:${['var(--f1)', 'var(--f4)'][i]}"></i>${sr.n}</span>`).join('') + '<span><i class="sw" style="background:var(--sage-soft);height:10px;width:14px"></i>Vùng insulin thấp</span>';
-(function insTable() {
-  const times = Object.keys(D.INSULIN_EVENTS).map(Number).sort((a, b) => a - b);
-  const f = t => { const h = Math.floor(t); return h + ':' + pad(Math.round((t - h) * 60)); };
-  $('#ins-tbl').innerHTML = '<thead><tr><th>Giờ</th>' + D.INSULIN.map(sr => `<th>${sr.n}</th>`).join('') + '</tr></thead><tbody>' +
-    times.map(t => `<tr><td class="mono">${f(t)}</td>${D.INSULIN.map(sr => `<td>${sr.meals.some(m => m[0] === t) ? D.INSULIN_EVENTS[t] : '—'}</td>`).join('')}</tr>`).join('') + '</tbody>';
-})();
-$('#cycle').innerHTML = D.CYCLE.map(c => `<li>${c.t}</li>`).join('');
-
-/* =====================================================================
-   PHẦN 4: ăn lại
-   ===================================================================== */
-$('#rf-first-t').textContent = D.REFEED.first.t;
-$('#rf-first-d').textContent = D.REFEED.first.d;
-$('#rf-rules').innerHTML = D.REFEED.rules.map(r => `<div><span class="ib">${ico(r.ico)}</span><div><h4>${r.t}</h4><p>${r.d}</p></div></div>`).join('');
-$('#ladder').innerHTML = D.LADDER.map((l, i) => `<li style="--k:${8 + i * 9}"><span class="ib">${ico(l.ico)}</span><span class="n">${l.n}</span><p>${l.t}</p></li>`).join('');
-$('#keep').innerHTML = D.REFEED.keep.map(k => `<li>${k.t}${cite(k.s)}</li>`).join('');
-const RF_OPTS = [{ n: '1 ngày', H: 36 }, { n: '2 ngày', H: 60 }, { n: '3 ngày', H: 84 }, { n: '5 ngày', H: 132 }, { n: '7 ngày', H: 180 }];
-function renderRefeedPlan(i) {
-  const R = refeedDays(RF_OPTS[i].H), maxSt = R === 1 ? 2 : R;
-  const M = D.REFEED.menus;
-  let h = '<div class="rfdays">';
-  for (let d = 0; d < R; d++) {
-    const st = d + 1;
-    h += `<div class="rfday"><h4>Ăn lại ngày ${d + 1} <span class="tag">Bậc ${st}${R === 1 ? '–2' : ''}</span></h4><dl>
-      <dt>Sáng</dt><dd>${d === 0 ? '<b>Bữa phá nhịn:</b> ' + D.REFEED.first.d : M[st].sang}</dd>
-      <dt>Trưa</dt><dd>${M[st].trua}</dd><dt>Tối</dt><dd>${R === 1 ? M[2].toi : M[st].toi}</dd></dl></div>`;
-  }
-  h += `<div class="rfday" style="background:var(--surface-2)"><h4>Sau đó</h4><dl>${D.LADDER.filter(l => l.s > maxSt).map(l => `<dt>${l.n}</dt><dd>${l.t}</dd>`).join('')}</dl></div></div>`;
-  $('#rf-plan').innerHTML = h;
-}
-$('#rf-len').innerHTML = RF_OPTS.map((o, i) => `<button role="tab" data-i="${i}" aria-selected="false">${o.n}</button>`).join('');
-function pickRefeedDefault() {
-  let i = 0;
-  if (plan) {
-    const H = model(plan).H;
-    RF_OPTS.forEach((o, j) => { if (Math.abs(o.H - H) < Math.abs(RF_OPTS[i].H - H)) i = j; });
-  }
-  $$('#rf-len button').forEach((b, j) => b.setAttribute('aria-selected', j === i ? 'true' : 'false'));
-}
-pickRefeedDefault();
-tabs($('#rf-len'), 'i', v => renderRefeedPlan(+v));
-
-/* =====================================================================
-   PHẦN 6–9
-   ===================================================================== */
-$('#qa').innerHTML = D.QA.map((x, i) => `<details class="more"${i === 0 ? ' open' : ''}><summary>${x.q}</summary><div class="in"><p>${x.a}${cite(x.s)}</p></div></details>`).join('');
-$('#evlegend').innerHTML = Object.keys(D.EV).map(k => `<span class="ev ev-${k}">${D.EV[k]}</span>`).join('');
-$('#benefits').innerHTML = D.BENEFITS.map(b => `<div class="ben"><div class="meta"><span class="ev ev-${b.ev}">${D.EV[b.ev]}</span></div><h4>${b.t}</h4><p>${b.d}${cite(b.s)}</p></div>`).join('');
-$('#why-eat').innerHTML = D.WHY_EAT.map(w => `<span class="chip static">${w}</span>`).join('');
-const ERA_C = { tien: 'var(--brown)', co: 'var(--amber)', trung: 'var(--rose)', hd: 'var(--sage)', tg: 'var(--plum)', kh: 'var(--indigo)' };
-function renderTimeline(era) {
-  $('#timeline').innerHTML = D.HISTORY.filter(h => era === 'all' || h.e === era).map(h =>
-    `<li style="--tc:${ERA_C[h.e]}"><span class="yr">${h.y} · ${D.ERAS[h.e]}</span><b>${h.t}</b><p>${h.d}</p></li>`).join('');
-}
-$('#tl-filter').innerHTML = '<button type="button" class="chip" data-e="all" aria-pressed="true">Tất cả</button>' +
-  Object.keys(D.ERAS).map(k => `<button type="button" class="chip" data-e="${k}" aria-pressed="false">${D.ERAS[k]}</button>`).join('');
-$('#tl-filter').addEventListener('click', e => {
-  const b = e.target.closest('button[data-e]'); if (!b) return;
-  $$('#tl-filter .chip').forEach(c => c.setAttribute('aria-pressed', c === b ? 'true' : 'false'));
-  renderTimeline(b.dataset.e);
-});
-renderTimeline('all');
-$('#sources').innerHTML = D.SOURCES.map(s => `<li id="src-${s.id}">${esc(s.t)}${s.u ? ` <a href="${s.u}" target="_blank" rel="noopener">${esc(s.u.replace(/^https?:\/\//, '').split('/')[0])}</a>` : ' <span class="int">(tài liệu nội bộ, không công khai)</span>'}</li>`).join('');
-$('#vtoc').innerHTML = D.CHAPTERS.map(c => `<a href="#${c.id}">${img(c.img, '', 'leaf')}<span><b>${c.n}</b>${c.t}</span></a>`).join('');
+/* ăn chậm, nhai kỹ */
+$('#chew').innerHTML = [
+  ['mouth', 'Tiêu hoá bắt đầu từ miệng', 'Nhai tới khi thức ăn nhão, thành nước; khi đó thực phẩm mới giải phóng hết năng lượng và dưỡng chất.'],
+  ['clock', 'Não cần khoảng 20 phút để biết đã no', 'Ăn nhanh, nuốt vội thì đã “ngốn” rất nhiều trước khi tín hiệu no tới.'],
+  ['eye', 'Khi ăn, chỉ ăn', 'Không tivi, không nhạc, không điện thoại, không sách báo. Chú ý hương thơm, mùi vị, kết cấu và cảm nhận của cơ thể.'],
+  ['heart', 'Ăn ít hơn mà no lâu', 'Tập nhai kỹ, bạn sẽ thấy chỉ cần ăn ít hơn thường lệ mà vẫn no lâu, và tận hưởng từng miếng.']
+].map(x => `<div><span class="ib">${ico(x[0])}</span><div><h4>${x[1]}</h4><p>${x[2]}</p></div></div>`).join('');
 
 /* đồng hồ ăn chậm 20 phút */
 (function slowTimer() {
@@ -963,13 +752,13 @@ $('#vtoc').innerHTML = D.CHAPTERS.map(c => `<a href="#${c.id}">${img(c.img, '', 
     const e = Math.min(TOTAL, elapsed), r = Math.ceil(TOTAL - e);
     tt.textContent = pad(Math.floor(r / 60)) + ':' + pad(r % 60);
     fg.style.strokeDashoffset = (C * e / TOTAL).toFixed(1);
-    if (running) { const i = Math.floor(e / 180) % D.SLOW.length; if (i !== last) { last = i; pr.textContent = D.SLOW[i]; } }
+    if (running) { const i = Math.floor(e / 200) % D.SLOW.length; if (i !== last) { last = i; pr.textContent = D.SLOW[i]; } }
   };
   const stop = done => {
     running = false; clearInterval(iv);
     go.textContent = done ? 'Bắt đầu lại' : 'Tiếp tục';
     ts.textContent = done ? 'xong' : 'tạm dừng';
-    if (done) { pr.textContent = '20 phút rồi. Tín hiệu no đã kịp lên não: bạn đang no mấy phần?'; try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) { /* không rung được thì thôi */ } }
+    if (done) { pr.textContent = '20 phút rồi: tín hiệu no đã kịp lên não. Lắng nghe cơ thể, đủ no thì dừng.'; try { if (navigator.vibrate) navigator.vibrate(200); } catch (e) { /* không rung được thì thôi */ } }
   };
   const tick = () => { elapsed = (Date.now() - start) / 1000; if (elapsed >= TOTAL) { elapsed = TOTAL; paint(); stop(true); return; } paint(); };
   go.addEventListener('click', () => {
@@ -985,6 +774,37 @@ $('#vtoc').innerHTML = D.CHAPTERS.map(c => `<a href="#${c.id}">${img(c.img, '', 
   });
   paint();
 })();
+
+/* =====================================================================
+   PHẦN 3: khi nhịn
+   ===================================================================== */
+$('#src3').innerHTML = D.SOURCES3.map(x => `<div style="--fc:var(--${x.c})"><span class="n">${x.n}</span><div><span class="when">Nguồn ${x.n} · ${esc(x.w)}</span><h4>${esc(x.t)}</h4><p>${esc(x.d)}</p></div></div>`).join('');
+$('#during').innerHTML = D.DURING.map(x => `<div><span class="ib">${ico(x.ico)}</span><div><h4>${esc(x.t)}</h4><p>${esc(x.d)}</p></div></div>`).join('');
+
+let curTool = D.TOOLBOX[0].id;
+function renderToolbox(id) {
+  curTool = id;
+  $$('#tb-chips .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id === id ? 'true' : 'false'));
+  const t = TB[id];
+  const w = id === 'doi' || id === 'lo-lang' ? store.get('na-why', '') : '';
+  $('#tb-card').innerHTML = `<div class="tbcard"><b>${esc(t.n)}</b><ul>${t.tips.map(x => `<li>${ico('check')}<span>${esc(x)}</span></li>`).join('')}</ul>
+    ${w ? `<div class="why-box"><b>Lý do của bạn</b>${esc(w)}</div>` : ''}</div>`;
+}
+$('#tb-chips').innerHTML = D.TOOLBOX.map(t => `<button type="button" class="chip" data-id="${t.id}" aria-pressed="false">${esc(t.n)}</button>`).join('');
+$('#tb-chips').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b) renderToolbox(b.dataset.id); });
+$('#break-d').textContent = D.BREAK.d;
+$('#keep').innerHTML = D.KEEP.map(k => `<li>${esc(k)}</li>`).join('');
+
+/* =====================================================================
+   PHẦN 4: hiểu thêm
+   ===================================================================== */
+$('#ins-jobs').innerHTML = D.INSULIN.jobs.map(j => `<li>${j}</li>`).join('');
+$('#ins-cycle').innerHTML = D.INSULIN.cycle.map(c => `<li>${esc(c)}</li>`).join('');
+$('#ins-harm').textContent = D.INSULIN.harm;
+$('#ins-gain').textContent = D.INSULIN.gain;
+$('#ins-know').innerHTML = D.INSULIN.know.map(k => `<li>${esc(k)}</li>`).join('');
+$('#learn').innerHTML = D.LEARN.map((x, i) => `<details class="more"${i === 0 ? ' open' : ''}><summary>${esc(x.q)}</summary><div class="in">${x.a.map(p => `<p>${esc(p)}</p>`).join('')}</div></details>`).join('');
+$('#why-eat').innerHTML = D.WHY_EAT.map(w => `<span class="chip static">${esc(w)}</span>`).join('');
 
 /* ---------- nền sáng/tối ---------- */
 $('#theme-btn').addEventListener('click', () => {
@@ -1011,29 +831,17 @@ $('#theme-btn').addEventListener('click', () => {
 /* ---------- khởi động ---------- */
 function onPlanChange() {
   renderTracker();
+  renderTrack();
   renderPhases();
-  renderRoutine();
-  drawFuel();
-  pickRefeedDefault();
-  renderRefeedPlan(+($('#rf-len button[aria-selected="true"]') || { dataset: { i: 0 } }).dataset.i);
-  if ($('#fq').value) renderFinder();
 }
 const clock = () => { const n = new Date(); $('#trk-clock').textContent = dayName(n) + ' · ' + hm(n); };
+const refresh = () => { clock(); if (plan && !editing) { renderTracker(true); renderPhases(); } };
 plan = loadPlan();
 renderPrep();
-renderScreen();
 renderToolbox(curTool);
-fuelTable();
 renderFinder();
 onPlanChange();
-drawInsulin();
 clock();
-fillCites(document);
-setInterval(() => { clock(); if (plan && !editing) { renderTracker(true); renderPhases(); drawFuel(); } }, 30000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden && plan && !editing) { clock(); renderTracker(true); renderPhases(); drawFuel(); } });
-let lastW = window.innerWidth, rzT;
-window.addEventListener('resize', () => {
-  clearTimeout(rzT);
-  rzT = setTimeout(() => { if (window.innerWidth !== lastW) { lastW = window.innerWidth; drawFuel(); drawInsulin(); } }, 150);
-});
+setInterval(refresh, 30000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
 })();
